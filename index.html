@@ -44,7 +44,9 @@
   .logo span { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .greet { color: var(--muted); font-size: 13px; }
   .iconbtn { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 7px 10px; cursor: pointer; font-size: 16px; color: var(--text); }
-  .logo { white-space: nowrap; }
+  .logo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header > div:first-child { min-width: 0; }
+  header > div:last-child { flex: none; }
   @media (max-width: 420px) { .logo { font-size: 16px; } .iconbtn { padding: 6px 8px; font-size: 15px; } header { gap: 6px; } }
   nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: color-mix(in srgb, var(--card) 92%, transparent);
     backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); }
@@ -196,16 +198,48 @@
   .chips::-webkit-scrollbar { display: none; }
   .chips button { flex: none; white-space: nowrap; padding: 6px 10px; }
   .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--card2); color: var(--muted); margin-left: 6px; vertical-align: middle; }
+  /* CA mode — serious books view */
+  body.ca { --grad: linear-gradient(135deg, #1e3a8a, #1e40af); --accent: #2563eb; --glow: none; }
+  body.ca .ticker, body.ca .stk, body.ca #sticker, body.ca .rain { display: none !important; }
+  body.ca .card { border-radius: 10px; }
+  body.ca .btn { border-radius: 8px; }
+  body.ca nav button { flex-basis: 74px; }
+  body.ca .logo span { background: none; color: var(--text); }
+  .ca-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  .ca-bar select { width: auto; padding: 7px 9px; }
+  .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  .tbl th, .tbl td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  .tbl th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .tbl td.n, .tbl th.n { text-align: right; white-space: nowrap; }
+  .tbl tr.tot td { font-weight: 700; border-top: 1.5px solid var(--text); border-bottom: 3px double var(--text); }
+  .tbl tr.sec td { font-weight: 700; background: var(--card2); }
+  .tbl tr.click { cursor: pointer; } .tbl tr.click:hover td { background: var(--card2); }
+  .ok { color: var(--green); font-weight: 600; }
+  .mono { font-variant-numeric: tabular-nums; }
+  .dbrow { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .dbrow .l1 { display: flex; justify-content: space-between; gap: 10px; }
+  .dbrow .sel { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+  .dbrow select { padding: 6px 8px; font-size: 12.5px; border-radius: 8px; }
+  @media (max-width: 520px) { .dbrow .sel { grid-template-columns: 1fr; } }
+  .bs2 { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-top: 12px; }
+  .setf { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .setf label { display: flex; flex-direction: column; gap: 4px; }
+  .mini { display: flex; align-items: flex-end; gap: 4px; height: 110px; }
+  .mini .m { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; font-size: 10px; color: var(--muted); height: 100%; }
+  .mini .p { display: flex; gap: 2px; align-items: flex-end; height: 85px; }
+  .mini .p i { width: 7px; display: block; border-radius: 2px 2px 0 0; min-height: 1px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div>
-      <div class="logo">💸 <span>Kaha Gaya Mera Paisa</span></div>
+      <div class="logo">💸 <span id="logoT">Kaha Gaya Mera Paisa</span></div>
       <div class="greet" id="greet">Paisa dhoondh rahe hain… 🕵️</div>
     </div>
     <div style="display:flex;gap:6px">
+      <button class="iconbtn" id="modeBtn" title="CA mode — books, ITR, analytics" onclick="toggleMode()">👔</button>
       <button class="iconbtn" id="vibeBtn" title="Vibe pop-ups on/off" onclick="toggleVibe()">🎬</button>
       <button class="iconbtn" id="installBtn" title="Install app" onclick="installApp()" style="display:none">📲</button>
       <button class="iconbtn" id="themeBtn" title="Theme" onclick="toggleTheme()">🌗</button>
@@ -255,6 +289,17 @@
     set(k, v) { try { localStorage.setItem('kgmp_' + k, v); } catch (e) {} },
   };
   let VIBE = store.get('vibe', 'on') === 'on';
+  const CA_TABS = [['ca_over', '📊', 'Overview'], ['ca_day', '📒', 'Day Book'], ['ca_led', '📚', 'Ledgers'], ['ca_tb', '⚖️', 'Trial Bal.'],
+    ['ca_pl', '📈', 'I&E / P&L'], ['ca_bs', '🏛️', 'Bal. Sheet'], ['ca_itr', '🧾', 'ITR / Tax'], ['ca_an', '🔬', 'Analytics'], ['ca_imp', '📥', 'Import']];
+  const CA_TITLES = { ca_over: 'Overview', ca_day: 'Day Book (journal)', ca_led: 'Ledgers', ca_tb: 'Trial Balance', ca_pl: 'Income & Expenditure / P&L',
+    ca_bs: 'Balance Sheet', ca_itr: 'Income-tax computation', ca_an: 'Analytics', ca_imp: 'Import statements' };
+  const GROUP_LABEL = { asset: 'Assets — bank, cash & wallets', invest: 'Investments', person: 'Loans & advances (people)', suspense: 'Suspense',
+    liability: 'Liabilities — cards, pay-later & loans', income: 'Income', expense: 'Expenditure', capital: 'Capital' };
+  let MODE = store.get('mode', 'fun') === 'ca' ? 'ca' : 'fun';
+  let CATAB = store.get('catab', 'ca_over');
+  if (!CA_TABS.some(t => t[0] === CATAB)) CATAB = 'ca_over';
+  let CA = null, CAFY = store.get('cafy', ''), CABUSY = false, CAERR = '', LEDSEL = '', CASIM = false, DBN = 150;
+  const DBF = { q: '', head: '', month: '', flag: '' };
 
   /* ── utils ── */
   function inr(n) { n = Number(n) || 0; return (n < 0 ? '-' : '') + '₹' + Math.abs(n).toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
@@ -262,7 +307,25 @@
     return a >= 1e7 ? s + '₹' + (a / 1e7).toFixed(1) + 'Cr' : a >= 1e5 ? s + '₹' + (a / 1e5).toFixed(1) + 'L' : a >= 1e3 ? s + '₹' + (a / 1e3).toFixed(1) + 'k' : inr(n); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
   function jsq(s) { return esc(String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'")); }
-  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+  /* no-repeat picker: a line comes back only after most of its pool has been shown (remembered on this device) */
+  let PICKS = (() => { try { return JSON.parse(localStorage.getItem('kgmp_picks') || '{}') || {}; } catch (e) { return {}; } })();
+  function pick(a) {
+    if (!a || !a.length) return '';
+    if (a.length < 3) return a[Math.floor(Math.random() * a.length)];
+    const s = x => (typeof x === 'string' ? x : JSON.stringify(x));
+    const sig = a.length + '|' + s(a[0]).slice(0, 30) + '|' + s(a[a.length - 1]).slice(0, 30);
+    let h = 5381;
+    for (let i = 0; i < sig.length; i++) h = ((h << 5) + h + sig.charCodeAt(i)) | 0;
+    const k = (h >>> 0).toString(36);
+    let used = PICKS[k] || [];
+    let pool = a.map((_, i) => i).filter(i => used.indexOf(i) < 0);
+    if (!pool.length) { used = used.slice(-Math.floor(a.length / 3)); pool = a.map((_, i) => i).filter(i => used.indexOf(i) < 0); }
+    const i = pool[Math.floor(Math.random() * pool.length)];
+    used.push(i); PICKS[k] = used;
+    if (Object.keys(PICKS).length > 300) PICKS = {};
+    try { localStorage.setItem('kgmp_picks', JSON.stringify(PICKS)); } catch (e) {}
+    return a[i];
+  }
   function pct(x) { return Math.round((x || 0) * 100) + '%'; }
   function fdate(iso, o) { return new Date(iso).toLocaleDateString('en-IN', o || { day: '2-digit', month: 'short' }); }
   function emo(c) { return (D && D.catEmoji[c]) || '🏷️'; }
@@ -273,6 +336,7 @@
   let vibeTimer;
   function showVibe(text, emoji, kicker) {
     if (!text) return;
+    if (MODE === 'ca') { emoji = '📘'; if (!kicker || /bhai|vibe|update/i.test(kicker)) kicker = 'Notice'; }
     const m = String(text).match(/^\s*(\p{Extended_Pictographic})/u);
     document.getElementById('vibeE').textContent = emoji || (m ? m[1] : '🎬');
     document.getElementById('vibeK').textContent = kicker || 'Vibe check';
@@ -284,10 +348,11 @@
   }
   function hideVibe() { document.getElementById('vibe').classList.remove('show'); }
   function rain(chars, n) {
+    if (MODE === 'ca') return;
     for (let i = 0; i < (n || 26); i++) {
       const s = document.createElement('div');
       s.className = 'rain';
-      s.textContent = pick(chars);
+      s.textContent = chars[Math.floor(Math.random() * chars.length)];
       s.style.left = Math.random() * 100 + 'vw';
       s.style.fontSize = (16 + Math.random() * 22) + 'px';
       s.style.animationDuration = (1.6 + Math.random() * 1.8) + 's';
@@ -321,7 +386,9 @@
   function errText(e) { return String((e && e.message) || e).replace(/^Error:\s*/, ''); }
   function applyRes(res, after) {
     const prevBadges = D ? D.badges.filter(b => b.got).length : null;
-    D = res.data; saveCache(); render();
+    D = res.data; saveCache();
+    if (MODE === 'ca') { CA = null; render(); if (res.msg) showVibe('Saved — entry posted to the books.', null, 'Saved'); if (after) after(res); return res; }
+    render();
     if (res.msg) showVibe(res.msg, null, 'Update');
     if (res.ev) sticker(res.ev);
     const nowBadges = D.badges.filter(b => b.got).length;
@@ -340,7 +407,7 @@
 
   /* ── stickers ── */
   function showSticker(s) {
-    if (!s || !VIBE) return;
+    if (!s || !VIBE || MODE === 'ca') return;
     const el = document.getElementById('sticker');
     document.getElementById('stkE').textContent = s.e;
     document.getElementById('stkT').textContent = s.t;
@@ -353,7 +420,7 @@
   /* ── offline queue (installed app) ── */
   function queue() { try { return JSON.parse(store.get('queue', '[]')) || []; } catch (e) { return []; } }
   function setQueue(q) { store.set('queue', JSON.stringify(q)); renderQueuePill(); }
-  function renderQueuePill() { const n = queue().length, el = document.getElementById('qhint'); if (el) el.innerHTML = n ? `📴 ${n} entries offline queue mein — net aate hi sync 🔄` : 'Bas type kar jaise dost ko bolta hai ✍️'; }
+  function renderQueuePill() { const n = queue().length, el = document.getElementById('qhint'); if (el) el.innerHTML = n ? `📴 ${n} entries offline queue mein — net aate hi sync 🔄` : MODE === 'ca' ? 'Quick entry — posted to the books automatically.' : 'Bas type kar jaise dost ko bolta hai ✍️'; }
   async function flushQueue() {
     let q = queue();
     if (!q.length || IS_GAS || !navigator.onLine) return;
@@ -397,16 +464,19 @@
 
   /* ── navigation ── */
   function renderNav() {
-    document.getElementById('nav').innerHTML = TABS.map(t =>
-      `<button class="${t[0] === TAB ? 'on' : ''}" onclick="go('${t[0]}')"><b>${t[1]}</b>${t[2]}</button>`).join('');
+    const tabs = MODE === 'ca' ? CA_TABS : TABS, cur = MODE === 'ca' ? CATAB : TAB;
+    document.getElementById('nav').innerHTML = tabs.map(t =>
+      `<button class="${t[0] === cur ? 'on' : ''}" onclick="go('${t[0]}')"><b>${t[1]}</b>${t[2]}</button>`).join('');
   }
   function go(tab) {
+    if (tab.indexOf('ca_') === 0) { CATAB = tab; store.set('catab', tab); renderNav(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     TAB = tab; store.set('tab', tab); renderNav(); render(); window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (VIBE && D) showVibe(pick(D.lines.sections[tab]), null, TAB_TITLES[tab]);
+    if (VIBE && D && MODE !== 'ca') showVibe(pick(D.lines.sections[tab]), null, TAB_TITLES[tab]);
   }
 
   /* ── main render ── */
   function render() {
+    if (MODE === 'ca') return renderCA();
     if (!D) return;
     const h = new Date().getHours();
     const g = D.lines.greet[h < 12 ? 'morning' : h < 17 ? 'afternoon' : h < 21 ? 'evening' : 'night'];
@@ -423,7 +493,7 @@
     const cats = Object.entries(D.month.cats).sort((a, b) => b[1] - a[1]);
     const a = D.aura || { score: 0, tier: 'Loading…', emoji: '⏳', next: null };
     const apct = a.next ? Math.max(4, Math.min(100, a.score / Math.max(1, a.score + a.next.need) * 100)) : 100;
-    const ticker = [...D.povs.map(p => p.replace(/\n/g, ' ')), ...D.lines.sections.home.slice(-6)].map(t => '🔥 ' + t).join('   •   ');
+    const ticker = [...D.povs.map(p => p.replace(/\n/g, ' ')), ...D.lines.sections.home.slice().sort(() => Math.random() - .5).slice(0, 6)].map(t => '🔥 ' + t).join('   •   ');
     let html = `${cachedNote()}<div class="ticker"><span>${esc(ticker)}</span></div>
     <div class="card hero" style="margin-top:12px">
       ${stk(a.emoji, a.tier, 7, 'right:12px;top:12px', 'dark')}
@@ -626,7 +696,7 @@
     const acc = (document.getElementById('stAcc') || {}).value || '', pw = (document.getElementById('stPw') || {}).value || '';
     const row = { name: file.name, status: 'busy', msg: 'Statement padh rahe hain… ' + pick(D.lines.scanWait) };
     STMTLOG = [row].concat(STMTLOG).slice(0, 10); render();
-    const upd = m => { row.msg = m; if (TAB === 'jaadu') render(); };
+    const upd = m => { row.msg = m; if ((MODE !== 'ca' && TAB === 'jaadu') || (MODE === 'ca' && CATAB === 'ca_imp')) render(); };
     const tot = { found: 0, added: 0, dup: 0, spent: 0, income: 0, account: acc, fix: null };
     const send = async (payload, label) => {
       upd('🪄 ' + label + ' — AI entries padh raha hai…');
@@ -1056,6 +1126,351 @@
     const d = formData(e.target);
     call('addTx', { type: d.type, amount: d.amount, to: d.to, account: D.defaultAccount }, () => e.target.reset());
   }
+  /* ══════════ 👔 CA MODE — books of account, ITR, analytics (serious tone) ══════════ */
+  function fa(n) { n = Number(n) || 0; const s = Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); return n < -0.004 ? '(' + s + ')' : s; }
+  function fdc(v) { v = Number(v) || 0; return Math.abs(v) < 0.005 ? '0.00' : fa(Math.abs(v)) + (v > 0 ? ' Dr' : ' Cr'); }
+  function fpc(x) { return x === null || x === undefined || isNaN(x) ? '—' : (Math.round(x * 1000) / 10) + '%'; }
+  function fd2(iso) { return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }
+  function r2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+  function ym(d) { d = new Date(d); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2); }
+  function ymd(d) { d = new Date(d); return ym(d) + '-' + ('0' + d.getDate()).slice(-2); }
+  function nm(k) { return (CA && CA.report.names[k]) || k; }
+  function cstat(l, v, cls) { return `<div class="card stat"><div class="l">${l}</div><div class="v mono ${cls || ''}">${v}</div></div>`; }
+  function crow(l, v) { return `<div class="row"><span>${l}</span><b class="mono">${v}</b></div>`; }
+  function caErr(e) { showVibe(errText(e), null, 'Error'); }
+
+  function applyMode() {
+    document.body.classList.toggle('ca', MODE === 'ca');
+    const b = document.getElementById('modeBtn');
+    if (b) { b.textContent = MODE === 'ca' ? '🎬' : '👔'; b.title = MODE === 'ca' ? 'Switch back to bakchodi mode' : 'CA mode — books, ITR, analytics'; }
+    const v = document.getElementById('vibeBtn'); if (v) v.style.display = MODE === 'ca' ? 'none' : '';
+    const l = document.getElementById('logoT'); if (l) l.textContent = MODE === 'ca' ? 'Books of Account' : 'Kaha Gaya Mera Paisa';
+    const q = document.getElementById('q'); if (q) q.placeholder = MODE === 'ca' ? 'Quick entry — e.g. 2500 electricity hdfc' : '250 swiggy';
+    renderQueuePill();
+  }
+  function toggleMode() {
+    MODE = MODE === 'ca' ? 'fun' : 'ca'; store.set('mode', MODE); hideVibe(); applyMode(); renderNav(); render(); window.scrollTo({ top: 0 });
+    if (MODE === 'fun') { if (D) { window.__greet = ''; render(); } if (D && VIBE) { showVibe(pick(D.lines.sections[TAB]), null, 'Bakchodi mode ON'); setTimeout(() => sticker('welcome'), 500); } }
+    else showVibe('CA mode: books of account, tax computation and analytics. Tap 🎬 to switch back.', null, 'CA mode');
+  }
+  function loadCA() {
+    if (CABUSY) return;
+    CABUSY = true; CAERR = '';
+    apiCall('ca', { fy: CAFY }).then(res => { CA = res.ca; CAFY = String(CA.fy); store.set('cafy', CAFY); CABUSY = false; if (MODE === 'ca') render(); })
+      .catch(e => { CABUSY = false; CAERR = errText(e); if (MODE === 'ca') render(); });
+  }
+  function caReload() { CA = null; render(); }
+  function caFy(y) { CAFY = String(y); store.set('cafy', CAFY); CA = null; LEDSEL = ''; DBF.month = ''; render(); }
+  function refreshD() { apiCall('dashboard').then(res => { D = res.data; saveCache(); }).catch(() => {}); }
+
+  function renderCA() {
+    const g = document.getElementById('greet');
+    if (!CA) {
+      g.textContent = 'Books of account';
+      document.getElementById('app').innerHTML = CAERR ? `<div class="loader"><b>⚠️</b>${esc(CAERR)}<br><button class="ghost" style="margin-top:10px" onclick="CAERR='';render()">Retry</button></div>`
+        : '<div class="loader"><b>📒</b>Preparing books of account…</div>';
+      if (!CAERR) loadCA();
+      return;
+    }
+    const r = CA.report;
+    g.textContent = r.label + ' (' + r.ay + ') · ' + (r.current ? 'as on ' + fd2(r.asOn) : 'year ended ' + fd2(r.to));
+    const fn = { ca_over: cOver, ca_day: cDay, ca_led: cLed, ca_tb: cTB, ca_pl: cPL, ca_bs: cBS, ca_itr: cITR, ca_an: cAn, ca_imp: cImp }[CATAB] || cOver;
+    document.getElementById('app').innerHTML = '<section class="on">' + caBar() + fn() + '</section>';
+  }
+  function caBar() {
+    return `<div class="ca-bar"><select onchange="caFy(this.value)">${CA.fys.map(f => `<option value="${f.y}" ${f.y === CA.fy ? 'selected' : ''}>${f.label} · ${f.ay}</option>`).join('')}</select>
+      <button class="ghost" onclick="caReload()">↻ Refresh</button><button class="ghost" onclick="caCSV()">⬇ CSV</button>
+      <button class="ghost" onclick="caExport()">📤 Export to Google Sheets</button>
+      <span class="sub" style="margin-left:auto">${esc(CA_TITLES[CATAB] || '')}</span></div>`;
+  }
+
+  /* Overview */
+  function cOver() {
+    const r = CA.report, ie = r.ie, bs = r.bs, t = CA.itr, a = CA.analytics;
+    const best = t.best === 'new' ? t.nw : t.old;
+    const warn = t.warnings.slice();
+    a.coverage.forEach(c => warn.push(c.account + ': no entries for ' + c.missing.join(', ') + ' — upload statements for these months.'));
+    if (a.idle && a.idle.length) warn.push('No entries at all this FY in: ' + a.idle.join(', ') + '. Import their statements if they were used.');
+    return `<div class="stats">
+      ${cstat('Total income', fa(ie.totalIncome + ie.biz.receipts))}${cstat('Total expenditure', fa(ie.totalExpense + ie.biz.totalExp))}
+      ${cstat('Surplus / (deficit)', fa(ie.surplus), ie.surplus < 0 ? 'neg' : 'pos')}${cstat('Net worth — closing', fa(bs.capital.close))}
+      ${cstat('Net worth — opening', fa(bs.capital.open))}${cstat('Tax — ' + (t.best === 'new' ? 'new' : 'old') + ' regime', fa(best.tax))}
+      ${cstat(t.payable.best >= 0 ? 'Tax payable' : 'Refund due', fa(Math.abs(t.payable.best)), t.payable.best > 0 ? 'neg' : 'pos')}${cstat('Suggested return', esc(t.form))}
+    </div>
+    <div class="grid">
+      <div class="card"><h2>Books status</h2>
+        ${crow('Entries in day book', r.stats.entries)}${crow('Re-classified manually', r.stats.manual)}${crow('Tax-tagged entries', r.stats.tagged)}
+        ${crow('Suspense entries', r.stats.suspense + (r.stats.suspense ? ' · ' + fa(r.stats.suspenseAmt) : ''))}
+        ${crow('Trial balance', Math.abs(r.tb.diff) < 0.01 ? '<span class="ok">Agreed ✓</span>' : '<span class="neg">Difference ' + fa(r.tb.diff) + '</span>')}
+        ${crow('Balance sheet', Math.abs(bs.diff) < 0.01 ? '<span class="ok">Tallied ✓</span>' : '<span class="neg">Difference ' + fa(bs.diff) + '</span>')}</div>
+      <div class="card"><h2>Income vs expenditure — month-wise</h2>${caMini(a.months)}</div>
+      <div class="card"><h2>Points to review</h2>${warn.length ? warn.map(w => `<div class="row"><span>• ${esc(w)}</span></div>`).join('') : '<div class="sub">Nothing pending.</div>'}</div>
+    </div>`;
+  }
+  function caMini(ms) {
+    const max = Math.max(1, ...ms.map(m => Math.max(m.inc, m.exp)));
+    return `<div class="mini">${ms.map(m => `<div class="m" title="${esc(m.label)}: income ${fa(m.inc)}, expenditure ${fa(m.exp)}"><div class="p"><i style="height:${Math.max(0, m.inc) / max * 100}%;background:var(--green)"></i><i style="height:${Math.max(0, m.exp) / max * 100}%;background:var(--red)"></i></div>${esc(m.label.slice(0, 3))}</div>`).join('')}</div>
+      <div class="sub" style="margin-top:6px"><span style="color:var(--green)">■</span> Income &nbsp; <span style="color:var(--red)">■</span> Expenditure</div>`;
+  }
+
+  /* Day Book */
+  function dbSig(e) { return String(e.note || '').toLowerCase().replace(/[^a-z ]+/g, ' ').trim().split(/\s+/).slice(0, 2).join(' '); }
+  function dbRows() {
+    const q = DBF.q.toLowerCase().trim();
+    return CA.report.dayBook.filter(e => (!q || (e.note + ' ' + nm(e.dr) + ' ' + nm(e.cr) + ' ' + e.amt + ' ' + e.id).toLowerCase().indexOf(q) >= 0)
+      && (!DBF.head || e.dr === DBF.head || e.cr === DBF.head) && (!DBF.month || ym(e.date) === DBF.month)
+      && (!DBF.flag || (DBF.flag === 'susp' ? e.key === 'BS:suspense' : DBF.flag === 'manual' ? e.manual : DBF.flag === 'tagged' ? !!e.tag : DBF.flag === 'misc' ? e.key === 'EXP:Other' : true)))
+      .slice().reverse();
+  }
+  function cDay() {
+    const heads = Object.keys(CA.report.names).sort((a, b) => nm(a).localeCompare(nm(b)));
+    const months = [];
+    for (let i = 0; i < 12; i++) { const d = new Date(CA.fy, 3 + i, 1); months.push([ym(d), d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })]); }
+    const flags = [['', 'All entries'], ['susp', 'Suspense only'], ['misc', 'Drawings — Other'], ['manual', 'Re-classified'], ['tagged', 'Tax-tagged']];
+    return `<div class="card" style="margin-top:12px"><div class="filters">
+      <input placeholder="Search narration / ledger / amount" value="${esc(DBF.q)}" oninput="DBF.q=this.value;DBN=150;caRefreshDay()">
+      <select onchange="DBF.head=this.value;DBN=150;render()"><option value="">All ledgers</option>${heads.map(k => `<option value="${esc(k)}" ${k === DBF.head ? 'selected' : ''}>${esc(nm(k))}</option>`).join('')}</select>
+      <select onchange="DBF.month=this.value;DBN=150;render()"><option value="">All months</option>${months.map(m => `<option value="${m[0]}" ${m[0] === DBF.month ? 'selected' : ''}>${m[1]}</option>`).join('')}</select>
+      <select onchange="DBF.flag=this.value;DBN=150;render()">${flags.map(o => `<option value="${o[0]}" ${o[0] === DBF.flag ? 'selected' : ''}>${o[1]}</option>`).join('')}</select></div>
+      <label class="sub" style="display:flex;gap:6px;align-items:center"><input type="checkbox" style="width:auto" ${CASIM ? 'checked' : ''} onchange="CASIM=this.checked"> Apply a change to every entry with a similar narration in this FY</label>
+      <div id="dbList">${dbList(dbRows())}</div></div>`;
+  }
+  function caRefreshDay() { const el = document.getElementById('dbList'); if (el) el.innerHTML = dbList(dbRows()); }
+  function dbList(rows) {
+    const tot = rows.reduce((s, e) => s + e.amt, 0);
+    return `<div class="sub" style="margin:8px 0">${rows.length} entries · total ${fa(tot)} · newest first</div>` + (rows.slice(0, DBN).map(dbRow).join('') || '<div class="empty">No entries for this filter.</div>')
+      + (rows.length > DBN ? `<button class="ghost" style="margin-top:8px" onclick="DBN+=300;caRefreshDay()">Show more (${rows.length - DBN} left)</button>` : '');
+  }
+  function dbRow(e) {
+    const opts = CA.options[e.type] || [];
+    const autoLbl = e.manual ? 'Auto' : 'Auto — ' + nm(e.key);
+    const head = e.type === 'transfer' ? `<select disabled><option>Contra — ${esc(nm(e.dr))}</option></select>`
+      : `<select onchange="caTag('${jsq(e.id)}','ledger',this.value)">${opts.map(o => `<option value="${esc(o[0])}" ${o[0] === (e.ov || '') ? 'selected' : ''}>${esc(o[0] ? o[1] : autoLbl)}</option>`).join('')}</select>`;
+    const tagAuto = e.tagManual ? 'Tax tag: auto' : 'Tax tag: auto — ' + (e.tag || 'none');
+    const tag = `<select onchange="caTag('${jsq(e.id)}','tag',this.value)"><option value="">${esc(tagAuto)}</option>${Object.keys(CA.tags).map(k => `<option value="${esc(k)}" ${k === (e.tg || '') ? 'selected' : ''}>${esc(CA.tags[k])}</option>`).join('')}</select>`;
+    return `<div class="dbrow"><div class="l1"><div style="min-width:0"><div class="sub">${fd2(e.date)} · ${esc(e.type)} · #${esc(e.id)}${e.manual ? ' · <b>re-classified</b>' : ''}</div>
+      <div class="ellip"><b>Dr</b> ${esc(nm(e.dr))}</div><div class="ellip"><b>Cr</b> ${esc(nm(e.cr))}</div>${e.note ? `<div class="sub ellip">${esc(e.note)}</div>` : ''}</div>
+      <div class="mono" style="font-weight:700;white-space:nowrap">${fa(e.amt)}</div></div><div class="sel">${head}${tag}</div></div>`;
+  }
+  function caTag(id, field, val) {
+    const e = CA.report.dayBook.find(x => x.id === id);
+    let ids = [id];
+    if (CASIM && e && dbSig(e)) { const s = dbSig(e); ids = CA.report.dayBook.filter(x => x.type === e.type && dbSig(x) === s).map(x => x.id); }
+    const data = { ids: ids, fy: CA.fy }; data[field] = val;
+    const n = ids.length + (ids.length > 1 ? ' entries' : ' entry');
+    showVibe('Updating ' + n + '…', null, 'Saving');
+    apiCall('caTag', data).then(res => { CA = res.ca; render(); showVibe(n + ' updated.', null, 'Saved'); }).catch(caErr);
+  }
+
+  /* Ledgers */
+  function cLed() {
+    const r = CA.report;
+    if (LEDSEL) { const l = r.ledgers.find(x => x.key === LEDSEL); if (l) return ledDetail(l); LEDSEL = ''; }
+    const by = {};
+    r.ledgers.forEach(l => { (by[l.group] = by[l.group] || []).push(l); });
+    return Object.keys(GROUP_LABEL).filter(g => by[g]).map(g => `<div class="card" style="margin-top:12px"><h2>${GROUP_LABEL[g]}</h2><div class="tbl-wrap"><table class="tbl">
+      <tr><th>Ledger</th><th class="n">Opening</th><th class="n">Debit</th><th class="n">Credit</th><th class="n">Closing</th></tr>
+      ${by[g].map(l => `<tr class="click" onclick="LEDSEL='${jsq(l.key)}';render();window.scrollTo({top:0})"><td>${esc(l.name)}</td><td class="n">${l.real ? fdc(l.open) : '—'}</td><td class="n">${fa(l.dr)}</td><td class="n">${fa(l.cr)}</td><td class="n">${fdc(l.real ? l.close : l.dr - l.cr)}</td></tr>`).join('')}
+      </table></div></div>`).join('') + '<div class="hint">Tap a ledger for the full account with running balance and opening-balance setting.</div>';
+  }
+  function ledDetail(l) {
+    const r = CA.report;
+    let b = l.real ? l.open : 0;
+    const rows = r.dayBook.filter(e => e.dr === l.key || e.cr === l.key).map(e => {
+      const isDr = e.dr === l.key;
+      b = r2(b + (isDr ? e.amt : -e.amt));
+      return `<tr><td style="white-space:nowrap">${fd2(e.date)}</td><td>${isDr ? 'To' : 'By'} ${esc(nm(isDr ? e.cr : e.dr))}${e.note ? `<div class="sub">${esc(e.note)}</div>` : ''}</td><td class="n">${isDr ? fa(e.amt) : ''}</td><td class="n">${isDr ? '' : fa(e.amt)}</td><td class="n">${fdc(b)}</td></tr>`;
+    }).join('');
+    const canOpen = l.real && (l.key.indexOf('A:') === 0 || l.key === 'BS:invest' || l.key.indexOf('P:') === 0);
+    const natural = l.group === 'liability' ? -l.open : l.open;
+    const what = l.group === 'liability' ? 'amount outstanding' : l.group === 'person' ? 'positive = they owe you' : 'balance';
+    return `<div class="card" style="margin-top:12px"><button class="ghost" onclick="LEDSEL='';render()">← All ledgers</button>
+      <h3 style="margin-top:10px">${esc(l.name)}</h3><div class="sub">${GROUP_LABEL[l.group] || ''} · ${esc(r.label)}</div>
+      ${canOpen ? `<div class="flex" style="margin-top:10px;flex-wrap:wrap"><span class="sub">Opening as on 1 Apr ${CA.fy} (${what}):</span>
+        <input id="opv" type="number" step="0.01" style="width:170px" value="${r2(natural)}"><button class="ghost" onclick="caOpening('${jsq(l.key)}')">Set opening</button></div>
+        <div class="hint">Enter the opening balance printed on the statement. Earlier entries stay; the base opening is adjusted so this FY starts at this figure.</div>` : ''}
+      <div class="tbl-wrap" style="margin-top:10px"><table class="tbl"><tr><th>Date</th><th>Particulars</th><th class="n">Debit</th><th class="n">Credit</th><th class="n">Balance</th></tr>
+      <tr class="sec"><td></td><td>Opening balance</td><td></td><td></td><td class="n">${l.real ? fdc(l.open) : '—'}</td></tr>${rows}
+      <tr class="tot"><td></td><td>Closing balance</td><td class="n">${fa(l.dr)}</td><td class="n">${fa(l.cr)}</td><td class="n">${fdc(l.real ? l.close : l.dr - l.cr)}</td></tr></table></div></div>`;
+  }
+  function caOpening(key) {
+    const v = Number(document.getElementById('opv').value);
+    if (isNaN(v)) return showVibe('Enter a number.', null, 'Error');
+    apiCall('caOpening', { key: key, fy: CA.fy, value: v }).then(res => { CA = res.ca; render(); showVibe('Opening balance updated.', null, 'Saved'); refreshD(); }).catch(caErr);
+  }
+
+  /* Trial balance */
+  function cTB() {
+    const t = CA.report.tb, r = CA.report;
+    return `<div class="card" style="margin-top:12px"><h2>Trial balance — ${esc(r.label)}${r.current ? ' (as on ' + fd2(r.asOn) + ')' : ''}</h2><div class="tbl-wrap"><table class="tbl">
+      <tr><th>Ledger</th><th>Group</th><th class="n">Debit</th><th class="n">Credit</th></tr>
+      ${t.rows.map(x => `<tr><td>${esc(x.name)}</td><td class="sub">${esc(GROUP_LABEL[x.group] || x.group)}</td><td class="n">${x.dr ? fa(x.dr) : ''}</td><td class="n">${x.cr ? fa(x.cr) : ''}</td></tr>`).join('')}
+      <tr class="tot"><td>Total</td><td></td><td class="n">${fa(t.dr)}</td><td class="n">${fa(t.cr)}</td></tr></table></div>
+      <div class="hint">${Math.abs(t.diff) < 0.01 ? '<span class="ok">Trial balance agrees ✓</span>' : '<span class="neg">Difference ' + fa(t.diff) + '</span>'} · Real accounts at closing balance, nominal accounts at totals for the year, capital at opening.</div></div>`;
+  }
+
+  /* Income & expenditure / P&L */
+  function cPL() {
+    const ie = CA.report.ie, inv = CA.analytics.totals.inv, hasBiz = ie.biz.receipts || ie.biz.totalExp;
+    const line = (n, a, cls) => `<tr class="${cls || ''}"><td>${n}</td><td class="n">${fa(a)}</td></tr>`;
+    let h = '';
+    if (hasBiz) h += `<div class="card" style="margin-top:12px"><h2>A. Profit & loss — business / profession</h2><table class="tbl">${line('Gross receipts', ie.biz.receipts)}
+      ${ie.biz.expenses.map(x => line('Less: ' + esc(x.name), x.amt)).join('')}${line('Net profit / (loss)', ie.biz.profit, 'tot')}</table></div>`;
+    h += `<div class="bs2"><div class="card"><h2>${hasBiz ? 'B. ' : ''}Income</h2><table class="tbl">${ie.income.map(x => line(esc(x.name), x.amt)).join('') || '<tr><td class="sub">No income recorded</td><td></td></tr>'}${line('Total income', ie.totalIncome, 'tot')}</table></div>
+      <div class="card"><h2>${hasBiz ? 'C. ' : ''}Expenditure</h2><table class="tbl">${ie.expense.map(x => line(esc(x.name), x.amt)).join('') || '<tr><td class="sub">No expenditure recorded</td><td></td></tr>'}${line('Total expenditure', ie.totalExpense, 'tot')}</table></div></div>
+      <div class="card" style="margin-top:12px"><table class="tbl">${hasBiz ? line('Net profit from business', ie.biz.profit) : ''}${line('Personal surplus / (deficit)', ie.personalSurplus)}${line('Surplus / (deficit) carried to capital account', ie.surplus, 'tot')}</table>
+      ${inv ? `<div class="hint">Investments of ${fa(inv)} made during the year are shown in the balance sheet at cost, not as expenditure.</div>` : ''}</div>`;
+    return h;
+  }
+
+  /* Balance sheet */
+  function cBS() {
+    const bs = CA.report.bs, r = CA.report;
+    const sec = rows => { const by = {}; rows.forEach(x => { (by[x.sec] = by[x.sec] || []).push(x); });
+      return Object.keys(by).map(s => `<tr class="sec"><td>${esc(s)}</td><td class="n">${fa(by[s].reduce((a, x) => a + x.amt, 0))}</td></tr>` +
+        by[s].map(x => `<tr class="click" onclick="LEDSEL='${jsq(x.key)}';go('ca_led')"><td style="padding-left:18px">${esc(x.name)}</td><td class="n">${fa(x.amt)}</td></tr>`).join('')).join(''); };
+    return `<div class="card" style="margin-top:12px"><h2>Statement of affairs as on ${fd2(r.asOn)}</h2><div>${Math.abs(bs.diff) < 0.01 ? '<span class="ok">Tallied ✓ Assets = Liabilities + Capital</span>' : '<span class="neg">Difference ' + fa(bs.diff) + '</span>'}</div></div>
+    <div class="bs2"><div class="card"><h2>Liabilities & capital</h2><table class="tbl">
+      <tr class="sec"><td>Capital account</td><td class="n">${fa(bs.capital.close)}</td></tr>
+      <tr><td style="padding-left:18px">Opening balance (net worth on 1 Apr ${CA.fy})</td><td class="n">${fa(bs.capital.open)}</td></tr>
+      <tr><td style="padding-left:18px">Add: surplus / (deficit) for the year</td><td class="n">${fa(bs.capital.surplus)}</td></tr>
+      ${sec(bs.liabilities)}<tr class="tot"><td>Total</td><td class="n">${fa(bs.totalLiab)}</td></tr></table></div>
+    <div class="card"><h2>Assets</h2><table class="tbl">${sec(bs.assets) || '<tr><td class="sub">No assets recorded</td><td></td></tr>'}<tr class="tot"><td>Total</td><td class="n">${fa(bs.totalAssets)}</td></tr></table></div></div>`;
+  }
+
+  /* ITR / tax */
+  function slabTxt(s) { return s.map((x, i) => (x[0] === null ? 'Above ' + fa(s[i - 1][0]) : (i ? fa(s[i - 1][0]) : '0') + ' – ' + fa(x[0])) + ': ' + Math.round(x[1] * 100) + '%').join('<br>'); }
+  function pctS(x) { return (Math.round(x * 1000) / 10) + '%'; }
+  function cITR() {
+    const t = CA.itr, o = t.old, n = t.nw, best = t.best === 'new' ? n : o;
+    const cmp = (lbl, a, b, cls) => `<tr class="${cls || ''}"><td>${lbl}</td><td class="n">${fa(a)}</td>${n ? `<td class="n">${fa(b)}</td>` : ''}</tr>`;
+    const S = t.settings, A = t.auto, tg = A.tags || {};
+    const hint = { grossSalary: A.salaryCredits + (Number(S.tdsSalary) || 0), d80C: tg['80C'], d80CCD1B: tg['80CCD1B'], d80D: tg['80D'], d80E: tg['80E'], d80G: tg['80G'],
+      advTax: tg.ADVTAX, bizIncome: t.heads.biz.income, hpIncome: t.heads.hp.income };
+    const sel = (f, opts, cur) => `<label class="sub">${esc(f[1].split(':')[0])}<select data-f="${f[0]}">${opts.map(x => `<option value="${x[0]}" ${x[0] === cur ? 'selected' : ''}>${x[1]}</option>`).join('')}</select></label>`;
+    const field = f => {
+      if (f[0] === 'presumptive') return sel(f, [['actual', 'Actual (books of account)'], ['44AD', '44AD — business, 6% of digital receipts'], ['44ADA', '44ADA — profession, 50% of receipts']], S.presumptive || 'actual');
+      if (f[0] === 'age') return sel(f, [['below60', 'Below 60'], ['60to80', '60 to 80 (senior citizen)'], ['above80', '80 and above (super senior)']], S.age || 'below60');
+      return `<label class="sub">${esc(f[1])}<input data-f="${f[0]}" type="number" step="0.01" value="${S[f[0]] === undefined ? '' : S[f[0]]}" placeholder="${hint[f[0]] ? 'auto: ' + fa(hint[f[0]]) : ''}"></label>`;
+    };
+    return `<div class="card" style="margin-top:12px"><h2>Recommendation — ${esc(t.label)} (${esc(t.ay)})</h2>
+      <div style="font-size:18px;font-weight:700">${n ? (t.best === 'new' ? 'New regime (sec 115BAC)' : 'Old regime') : 'Old regime'} — total tax ${fa(best.tax)}</div>
+      ${n && t.saving ? `<div class="sub">Lower than the ${t.best === 'new' ? 'old' : 'new'} regime by ${fa(t.saving)}.</div>` : ''}
+      ${crow('Taxes already paid (TDS + advance / self-assessment)', fa(t.paid.total))}
+      <div class="row"><span>${t.payable.best >= 0 ? 'Balance tax payable' : 'Refund due'}</span><b class="mono ${t.payable.best > 0 ? 'neg' : 'pos'}">${fa(Math.abs(t.payable.best))}</b></div>
+      <div class="row"><span>Return form</span><b>${esc(t.form)}</b></div><div class="sub">${t.reasons.map(esc).join('<br>')}</div></div>
+    <div class="card" style="margin-top:12px"><h2>Computation of total income & tax</h2><div class="tbl-wrap"><table class="tbl">
+      <tr><th>Particulars</th><th class="n">Old regime</th>${n ? '<th class="n">New regime</th>' : ''}</tr>
+      ${cmp('Salary (net of exemptions & standard deduction)', t.heads.salary.netOld, t.heads.salary.netNew)}
+      ${cmp('Gross total income', o.gti, n && n.gti)}${cmp('Less: deductions (Chapter VI-A)', o.ded, n && n.ded)}${cmp('Income at normal rates', o.normal, n && n.normal)}
+      ${cmp('Income at special rates (capital gains)', o.special, n && n.special)}${cmp('Tax at normal rates', o.slab, n && n.slab)}${cmp('Tax at special rates', o.spTax, n && n.spTax)}
+      ${cmp('Less: rebate u/s 87A / marginal relief', o.rebate, n && n.rebate)}${cmp('Surcharge', o.surcharge, n && n.surcharge)}${cmp('Health & education cess @ 4%', o.cess, n && n.cess)}
+      ${cmp('Total tax liability', o.tax, n && n.tax, 'tot')}${cmp('Less: taxes paid', t.paid.total, t.paid.total)}${cmp('Payable / (refund)', t.payable.old, t.payable.nw, 'tot')}
+    </table></div></div>
+    <div class="grid"><div class="card"><h2>Schedule-wise figures for the ITR utility</h2><table class="tbl">${t.schedule.map(x => `<tr><td><div class="sub">${esc(x[0])}</div>${esc(x[1])}</td><td class="n">${typeof x[2] === 'number' ? fa(x[2]) : esc(x[2])}</td></tr>`).join('') || '<tr><td class="sub">No taxable figures yet</td><td></td></tr>'}</table></div>
+      <div class="card"><h2>Deductions — old regime (after limits)</h2><table class="tbl">${Object.keys(t.ded).map(k => `<tr><td>${esc(k)}</td><td class="n">${fa(t.ded[k])}</td></tr>`).join('')}<tr class="tot"><td>Total</td><td class="n">${fa(t.dedTotal)}</td></tr></table>
+        <div class="hint">Auto amounts come from tax-tagged Day Book entries; settings below override them. 80G is taken at 50% of the qualifying amount.</div></div>
+      <div class="card"><h2>Rates applied</h2><div class="sub"><b>Old regime</b> (${esc(t.age)}) — standard deduction ${fa(t.rules.old.sd)}, 87A rebate up to income ${fa(t.rules.old.rebateLimit)}<br>${slabTxt(t.rules.old.slabs)}</div>
+        ${t.rules.nw ? `<div class="sub" style="margin-top:8px"><b>New regime</b> — standard deduction ${fa(t.rules.nw.sd)}, 87A rebate up to income ${fa(t.rules.nw.rebateLimit)} (max ${fa(t.rules.nw.rebateMax)})<br>${slabTxt(t.rules.nw.slabs)}</div>` : ''}
+        <div class="sub" style="margin-top:8px">Capital gains: 111A ${pctS(t.rules.cg.stcg)} · 112A ${pctS(t.rules.cg.ltcg)} above ${fa(t.rules.cg.ltcgExempt)} · 112 ${pctS(t.rules.cg.ltcgOther)}${t.rules.assumed ? '<br><b>Rates for this year are assumed — verify.</b>' : ''}</div></div></div>
+    ${t.warnings.length ? `<div class="card" style="margin-top:12px"><h2>Points to check</h2>${t.warnings.map(w => `<div class="row"><span>• ${esc(w)}</span></div>`).join('')}</div>` : ''}
+    <div class="card" style="margin-top:12px"><h2>Tax settings — ${esc(t.label)}</h2><div class="sub" style="margin-bottom:8px">From Form 16, AIS / TIS / 26AS, broker capital-gains statement and certificates. Leave blank to use the auto figure.</div>
+      <div class="setf">${t.fields.map(field).join('')}</div><button class="btn" style="margin-top:10px" onclick="caSaveSet()">Save & recompute</button></div>
+    <div class="card" style="margin-top:12px"><h2>Notes</h2>${t.notes.map(x => `<div class="sub" style="margin:4px 0">• ${esc(x)}</div>`).join('')}</div>`;
+  }
+  function caSaveSet() {
+    const s = {};
+    document.querySelectorAll('[data-f]').forEach(el => { s[el.getAttribute('data-f')] = el.value; });
+    showVibe('Recomputing…', null, 'Saving');
+    apiCall('caSettings', { fy: CA.fy, settings: s }).then(res => { CA = res.ca; render(); showVibe('Tax settings saved and recomputed.', null, 'Saved'); }).catch(caErr);
+  }
+
+  /* Analytics */
+  function cAn() {
+    const a = CA.analytics, R = a.ratios, ms = a.months;
+    const catMax = Math.max(1, ...a.cats.map(c => Math.max(...c.months)));
+    const cell = v => `<td class="n" style="background:rgba(37,99,235,${Math.max(0, Math.min(.5, v / catMax * .5)).toFixed(3)})">${v ? fa(v) : ''}</td>`;
+    const wdMax = Math.max(1, ...a.weekday.map(w => w.amt));
+    const yy = (c, p) => (p ? fpc((c - p) / p) : '—');
+    return `<div class="stats">${cstat('Savings rate', fpc(R.savingsRate))}${cstat('Investment rate', fpc(R.investRate))}${cstat('EMI to income', fpc(R.emiToIncome))}${cstat('Fixed costs share', fpc(R.fixedShare))}
+      ${cstat('Discretionary share', fpc(R.discretionaryShare))}${cstat('Spent on credit', fpc(R.cardShare))}${cstat('Avg monthly spend', fa(R.avgMonthly))}${cstat('Avg daily spend', fa(R.avgDaily))}</div>
+    <div class="card" style="margin-top:12px"><h2>Month-wise</h2><div class="tbl-wrap"><table class="tbl"><tr><th>Month</th><th class="n">Income</th><th class="n">Expenditure</th><th class="n">Saved</th><th class="n">Rate</th><th class="n">Invested</th><th class="n">Tax paid</th><th class="n">Entries</th></tr>
+      ${ms.map(m => `<tr ${m.future ? 'style="opacity:.45"' : ''}><td style="white-space:nowrap">${esc(m.label)}</td><td class="n">${fa(m.inc)}</td><td class="n">${fa(m.exp)}</td><td class="n ${m.save < 0 ? 'neg' : ''}">${fa(m.save)}</td><td class="n">${fpc(m.rate)}</td><td class="n">${fa(m.inv)}</td><td class="n">${fa(m.tax)}</td><td class="n">${m.n}</td></tr>`).join('')}
+      <tr class="tot"><td>Total</td><td class="n">${fa(a.totals.inc)}</td><td class="n">${fa(a.totals.exp)}</td><td class="n">${fa(a.totals.save)}</td><td class="n">${fpc(R.savingsRate)}</td><td class="n">${fa(a.totals.inv)}</td><td class="n">${fa(a.totals.tax)}</td><td class="n">${ms.reduce((s, m) => s + m.n, 0)}</td></tr></table></div></div>
+    <div class="card" style="margin-top:12px"><h2>Expenditure head × month</h2><div class="tbl-wrap"><table class="tbl"><tr><th>Head</th>${ms.map(m => `<th class="n">${esc(m.label.slice(0, 3))}</th>`).join('')}<th class="n">Total</th></tr>
+      ${a.cats.map(c => `<tr><td style="white-space:nowrap">${esc(c.name)}</td>${c.months.map(cell).join('')}<td class="n"><b>${fa(c.total)}</b></td></tr>`).join('') || '<tr><td class="sub">No expenditure yet</td></tr>'}</table></div></div>
+    <div class="grid">
+      <div class="card"><h2>Spend by weekday</h2>${a.weekday.map(w => `<div class="row"><span style="width:38px">${w.day}</span><div class="bar" style="flex:1;margin:0"><i style="width:${w.amt / wdMax * 100}%"></i></div><span class="mono" style="min-width:96px;text-align:right">${fa(w.amt)}</span></div>`).join('')}</div>
+      <div class="card"><h2>Top payees / merchants</h2><table class="tbl">${a.merchants.slice(0, 12).map(x => `<tr><td>${esc(x.name)}<div class="sub">${esc(x.head)} · ${x.n}×</div></td><td class="n">${fa(x.amt)}</td></tr>`).join('') || '<tr><td class="sub">—</td></tr>'}</table></div>
+      <div class="card"><h2>Recurring payments (3+ months)</h2><table class="tbl">${a.recurring.map(x => `<tr><td>${esc(x.name)}<div class="sub">${x.months} months · avg ${fa(x.avg)}</div></td><td class="n">${fa(x.amt)}</td></tr>`).join('') || '<tr><td class="sub">None detected yet</td></tr>'}</table></div>
+      <div class="card"><h2>Largest payments</h2><table class="tbl">${a.biggest.slice(0, 10).map(x => `<tr><td>${fd2(x.date)}<div class="sub">${esc(x.head)}${x.note ? ' · ' + esc(x.note) : ''}</div></td><td class="n">${fa(x.amt)}</td></tr>`).join('') || '<tr><td class="sub">—</td></tr>'}</table></div>
+      <div class="card"><h2>Year on year vs ${esc(a.yoy.label)}</h2>${a.yoy.has ? `<table class="tbl"><tr><th>Head</th><th class="n">This FY</th><th class="n">Prev FY</th><th class="n">Change</th></tr>
+        <tr class="sec"><td>Total income</td><td class="n">${fa(a.totals.inc)}</td><td class="n">${fa(a.yoy.inc)}</td><td class="n">${yy(a.totals.inc, a.yoy.inc)}</td></tr>
+        <tr class="sec"><td>Total expenditure</td><td class="n">${fa(a.totals.exp)}</td><td class="n">${fa(a.yoy.exp)}</td><td class="n">${yy(a.totals.exp, a.yoy.exp)}</td></tr>
+        ${a.yoy.rows.slice(0, 15).map(x => `<tr><td>${esc(x.name)}</td><td class="n">${fa(x.cur)}</td><td class="n">${fa(x.prev)}</td><td class="n ${x.change > 0 ? 'neg' : 'pos'}">${fpc(x.change)}</td></tr>`).join('')}</table>`
+        : '<div class="sub">No entries in the previous FY yet. Import last year\'s statements to compare.</div>'}</div>
+      <div class="card"><h2>Data coverage</h2>${a.coverage.length ? a.coverage.map(c => `<div class="row"><span><b>${esc(c.account)}</b><div class="sub">No entries: ${esc(c.missing.join(', '))}</div></span></div>`).join('') + '<div class="hint">Import statements for these months so the books are complete.</div>' : '<div class="sub">Every account has entries in every month so far.</div>'}</div>
+    </div>`;
+  }
+
+  /* Import (past years) */
+  function cImp() {
+    if (!D) return '<div class="loader"><b>📥</b>Loading accounts…</div>';
+    return `<div class="grid" style="margin-top:12px">${stmtCard()}<div class="card"><h2>Building past years</h2><div class="sub" style="line-height:1.7">
+      1. Pick the account and upload every statement (PDF — password-protected is fine — CSV or Excel). Duplicates are skipped automatically.<br>
+      2. Select the FY at the top and check Analytics → Data coverage for missing months.<br>
+      3. In Ledgers, open each account and set its opening balance as on 1 April from the statement, so the balance sheet matches the bank.<br>
+      4. Review Suspense and "Drawings — Other" in the Day Book, tag deductions, then Export.</div></div></div>`;
+  }
+
+  /* CSV + export */
+  function caCSV() {
+    if (!CA) return;
+    const r = CA.report, t = CA.itr, a = CA.analytics;
+    let rows;
+    switch (CATAB) {
+      case 'ca_led':
+        if (LEDSEL) {
+          const l = r.ledgers.find(x => x.key === LEDSEL); let b = l.real ? l.open : 0;
+          rows = [['Date', 'Particulars', 'Narration', 'Debit', 'Credit', 'Balance'], ['', 'Opening balance', '', '', '', fdc(b)]];
+          r.dayBook.filter(e => e.dr === l.key || e.cr === l.key).forEach(e => { const d = e.dr === l.key; b = r2(b + (d ? e.amt : -e.amt)); rows.push([ymd(e.date), (d ? 'To ' : 'By ') + nm(d ? e.cr : e.dr), e.note, d ? e.amt : '', d ? '' : e.amt, fdc(b)]); });
+          rows.push(['', 'Closing balance', '', l.dr, l.cr, fdc(l.real ? l.close : l.dr - l.cr)]);
+        } else rows = [['Ledger', 'Group', 'Opening', 'Debit', 'Credit', 'Closing']].concat(r.ledgers.map(l => [l.name, l.group, l.real ? fdc(l.open) : '', l.dr, l.cr, fdc(l.real ? l.close : l.dr - l.cr)]));
+        break;
+      case 'ca_tb': rows = [['Ledger', 'Group', 'Debit', 'Credit']].concat(r.tb.rows.map(x => [x.name, x.group, x.dr || '', x.cr || ''])).concat([['Total', '', r.tb.dr, r.tb.cr]]); break;
+      case 'ca_pl': rows = [['Section', 'Head', 'Amount'], ['Business', 'Gross receipts', r.ie.biz.receipts]].concat(r.ie.biz.expenses.map(x => ['Business', x.name, -x.amt]))
+        .concat([['Business', 'Net profit', r.ie.biz.profit]]).concat(r.ie.income.map(x => ['Income', x.name, x.amt])).concat([['Income', 'Total income', r.ie.totalIncome]])
+        .concat(r.ie.expense.map(x => ['Expenditure', x.name, x.amt])).concat([['Expenditure', 'Total expenditure', r.ie.totalExpense], ['Result', 'Surplus / (deficit)', r.ie.surplus]]); break;
+      case 'ca_bs': rows = [['Side', 'Section', 'Ledger', 'Amount'], ['Liabilities', 'Capital account', 'Opening', r.bs.capital.open], ['Liabilities', 'Capital account', 'Surplus for the year', r.bs.capital.surplus]]
+        .concat(r.bs.liabilities.map(x => ['Liabilities', x.sec, x.name, x.amt])).concat([['Liabilities', 'Total', '', r.bs.totalLiab]])
+        .concat(r.bs.assets.map(x => ['Assets', x.sec, x.name, x.amt])).concat([['Assets', 'Total', '', r.bs.totalAssets]]); break;
+      case 'ca_itr': rows = [['Schedule', 'Item', 'Amount']].concat(t.schedule).concat([['', '', ''], ['Computation', 'Old regime', 'New regime'],
+        ['Gross total income', t.old.gti, t.nw ? t.nw.gti : ''], ['Deductions', t.old.ded, t.nw ? t.nw.ded : ''], ['Total tax', t.old.tax, t.nw ? t.nw.tax : ''],
+        ['Taxes paid', t.paid.total, t.paid.total], ['Payable / (refund)', t.payable.old, t.nw ? t.payable.nw : ''], ['Recommended', t.best, ''], ['ITR form', t.form, '']]); break;
+      case 'ca_an': rows = [['Month', 'Income', 'Expenditure', 'Saved', 'Invested', 'Tax paid', 'Entries']].concat(a.months.map(m => [m.label, m.inc, m.exp, m.save, m.inv, m.tax, m.n]))
+        .concat([[''], ['Head'].concat(a.months.map(m => m.label)).concat(['Total'])]).concat(a.cats.map(c => [c.name].concat(c.months).concat([c.total]))); break;
+      default: rows = [['Date', 'Voucher', 'Type', 'Debit', 'Credit', 'Amount', 'Narration', 'Category', 'Tax tag']].concat(r.dayBook.map(e => [ymd(e.date), e.id, e.type, nm(e.dr), nm(e.cr), e.amt, e.note, e.cat, e.tag]));
+    }
+    csvDownload('KGMP-' + r.label.replace(/\s+/g, '') + '-' + (CA_TITLES[CATAB] || 'DayBook').replace(/[^A-Za-z]+/g, '') + '.csv', rows);
+  }
+  function csvDownload(fn, rows) {
+    const s = '﻿' + rows.map(x => x.map(c => '"' + String(c === undefined || c === null ? '' : c).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+    const u = URL.createObjectURL(new Blob([s], { type: 'text/csv;charset=utf-8' }));
+    const el = document.createElement('a'); el.href = u; el.download = fn; document.body.appendChild(el); el.click();
+    setTimeout(() => { URL.revokeObjectURL(u); el.remove(); }, 1500);
+    showVibe('Downloaded ' + fn, null, 'CSV');
+  }
+  function caExport() {
+    if (!CA) return;
+    showVibe('Creating a Google Sheet with the complete books… (10–30 s)', null, 'Export');
+    apiCall('caExport', { fy: CA.fy }).then(res => {
+      hideVibe();
+      openModal(`<h3>Books exported</h3><div class="sub" style="margin:6px 0 12px">${esc(CA.report.label)} — Summary, Day Book, Ledgers, Trial Balance, Income & Expenditure, Balance Sheet, ITR Computation and Analytics, saved in your Google Drive.</div>
+        <a class="btn" style="display:block;text-align:center;text-decoration:none" href="${esc(res.url)}" target="_blank" rel="noopener">Open in Google Sheets</a>
+        <button class="ghost" style="margin-top:10px;width:100%" onclick="closeModal()">Close</button>`);
+    }).catch(caErr);
+  }
+
   function openModal(html) { document.getElementById('modalBox').innerHTML = html; document.getElementById('modal').classList.add('show'); }
   function closeModal() { document.getElementById('modal').classList.remove('show'); }
 
@@ -1064,12 +1479,13 @@
   document.getElementById('vibeBtn').style.opacity = VIBE ? 1 : .4;
   document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') quick(); });
   let ex = 0;
-  setInterval(() => { const q = document.getElementById('q'); if (document.activeElement !== q) q.placeholder = EXAMPLES[ex++ % EXAMPLES.length]; }, 2800);
+  setInterval(() => { const q = document.getElementById('q'); if (document.activeElement !== q && MODE !== 'ca') q.placeholder = EXAMPLES[ex++ % EXAMPLES.length]; }, 2800);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
   const params = new URLSearchParams(location.search);
   const wantTab = params.get('tab') || store.get('tab', 'home');
   TAB = TABS.some(t => t[0] === wantTab) ? wantTab : 'home';
-  renderNav(); renderQueuePill();
+  applyMode(); renderNav(); renderQueuePill();
+  if (MODE === 'ca' && (IS_GAS || store.get('api', ''))) render();
 
   function connectView(err) {
     document.getElementById('app').innerHTML = `<div class="card hero" style="margin-top:12px">${stk('🔗', 'Step 1', -6, 'right:14px;top:14px', 'dark')}
@@ -1108,7 +1524,7 @@
       window.__fromCache = false;
       D = res.data; saveCache(); render();
       if (fresh) { showSticker({ e: '🔗', t: 'Connected. Slay!' }); rain(['✨', '💸', '🎉'], 30); }
-      else if (VIBE) { setTimeout(() => showVibe(pick(D.lines.sections[TAB]), null, TAB_TITLES[TAB]), 300); if (Math.random() < .35) setTimeout(() => sticker('welcome'), 900); }
+      else if (VIBE && MODE !== 'ca') { setTimeout(() => showVibe(pick(D.lines.sections[TAB]), null, TAB_TITLES[TAB]), 300); if (Math.random() < .35) setTimeout(() => sticker('welcome'), 900); }
       flushQueue(); receiveShared();
     }).catch(e => {
       if (!IS_GAS && !store.get('api', '')) { connectView(); return; }
