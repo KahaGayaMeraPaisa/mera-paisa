@@ -217,6 +217,14 @@
   .tbl tr.click { cursor: pointer; } .tbl tr.click:hover td { background: var(--card2); }
   .ok { color: var(--green); font-weight: 600; }
   .mono { font-variant-numeric: tabular-nums; }
+  table.classic { min-width: 640px; font-family: Georgia, "Times New Roman", serif; }
+  table.classic th:not(.n) { min-width: 200px; }
+  table.classic th { font-family: "Space Grotesk", system-ui, sans-serif; }
+  table.classic td { border-left: 1px solid var(--line); }
+  table.classic td.hd { font-weight: 700; background: var(--card2); }
+  table.classic td.b { font-weight: 700; border-top: 1px solid var(--muted); }
+  .bankrow { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .bankrow:last-child { border-bottom: 0; }
   .dbrow { padding: 10px 0; border-bottom: 1px solid var(--line); }
   .dbrow .l1 { display: flex; justify-content: space-between; gap: 10px; }
   .dbrow .sel { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
@@ -290,15 +298,16 @@
   };
   let VIBE = store.get('vibe', 'on') === 'on';
   const CA_TABS = [['ca_over', '📊', 'Overview'], ['ca_day', '📒', 'Day Book'], ['ca_led', '📚', 'Ledgers'], ['ca_tb', '⚖️', 'Trial Bal.'],
-    ['ca_pl', '📈', 'I&E / P&L'], ['ca_bs', '🏛️', 'Bal. Sheet'], ['ca_itr', '🧾', 'ITR / Tax'], ['ca_an', '🔬', 'Analytics'], ['ca_imp', '📥', 'Import']];
+    ['ca_pl', '📈', 'I&E / P&L'], ['ca_bs', '🏛️', 'Bal. Sheet'], ['ca_itr', '🧾', 'ITR / Tax'], ['ca_an', '🔬', 'Analytics'], ['ca_bank', '🏦', 'Bank A/cs'], ['ca_imp', '📥', 'Import']];
   const CA_TITLES = { ca_over: 'Overview', ca_day: 'Day Book (journal)', ca_led: 'Ledgers', ca_tb: 'Trial Balance', ca_pl: 'Income & Expenditure / P&L',
-    ca_bs: 'Balance Sheet', ca_itr: 'Income-tax computation', ca_an: 'Analytics', ca_imp: 'Import statements' };
+    ca_bs: 'Balance Sheet', ca_itr: 'Income-tax computation', ca_an: 'Analytics', ca_bank: 'Bank accounts', ca_imp: 'Import statements' };
   const GROUP_LABEL = { asset: 'Assets — bank, cash & wallets', invest: 'Investments', person: 'Loans & advances (people)', suspense: 'Suspense',
     liability: 'Liabilities — cards, pay-later & loans', income: 'Income', expense: 'Expenditure', capital: 'Capital' };
   let MODE = store.get('mode', 'fun') === 'ca' ? 'ca' : 'fun';
   let CATAB = store.get('catab', 'ca_over');
   if (!CA_TABS.some(t => t[0] === CATAB)) CATAB = 'ca_over';
   let CA = null, CAFY = store.get('cafy', ''), CABUSY = false, CAERR = '', LEDSEL = '', CASIM = false, DBN = 150;
+  let CLASSIC = store.get('classic', 'on') === 'on', BANKS = null, BANKEDIT = null, BANKSHOW = {};
   const DBF = { q: '', head: '', month: '', flag: '' };
 
   /* ── utils ── */
@@ -690,6 +699,14 @@
     await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
     return c.toDataURL('image/jpeg', 0.8).split(',')[1];
   }
+  /* run async jobs with a concurrency limit; the first job runs alone (it may create the account), first error stops the batch */
+  async function pool(jobs, n) {
+    if (!jobs.length) return;
+    await jobs[0]();
+    let next = 1;
+    const worker = async () => { while (next < jobs.length) { const j = jobs[next++]; await j(); } };
+    await Promise.all(Array.from({ length: Math.min(n, jobs.length) }, worker));
+  }
   function txtB64(s) { return btoa(unescape(encodeURIComponent(s))); }
   async function importStatement(file) {
     if (!file) return;
@@ -718,17 +735,19 @@
           const chunks = []; let cur = '', cnt = 0;
           pages.forEach((p, i) => {
             const t = '--- Page ' + (i + 1) + ' ---\n' + p.text + '\n';
-            if (cur && (cur.length + t.length > 9000 || cnt >= 3)) { chunks.push(cur); cur = ''; cnt = 0; }
+            if (cur && (cur.length + t.length > 18000 || cnt >= 6)) { chunks.push(cur); cur = ''; cnt = 0; }
             cur += t; cnt++;
           });
           if (cur) chunks.push(cur);
-          for (let i = 0; i < chunks.length; i++) {
-            await send({ name: file.name + '.part' + (i + 1) + '.txt', mime: 'text/plain', b64: txtB64(chunks[i]), hint: 'bank/card statement, part ' + (i + 1) + ' of ' + chunks.length }, 'Part ' + (i + 1) + '/' + chunks.length);
-          }
+          let doneN = 0;
+          await pool(chunks.map((c, i) => () => send({ name: file.name + '.part' + (i + 1) + '.txt', mime: 'text/plain', b64: txtB64(c), hint: 'bank/card statement, part ' + (i + 1) + ' of ' + chunks.length },
+            'Parts ' + chunks.length + ' (3 at a time)').then(() => upd('🪄 ' + (++doneN) + '/' + chunks.length + ' parts done…'))), 3);
         } else {
-          for (let i = 0; i < Math.min(pages.length, 12); i++) {
-            await send({ name: file.name + '.p' + (i + 1) + '.jpg', mime: 'image/jpeg', b64: await pageToJpeg(pages[i].page), hint: 'scanned bank/card statement page ' + (i + 1) }, 'Page ' + (i + 1) + '/' + pages.length);
-          }
+          const imgs = [];
+          for (let i = 0; i < Math.min(pages.length, 12); i++) imgs.push({ i: i, b64: await pageToJpeg(pages[i].page) });
+          let doneN = 0;
+          await pool(imgs.map(x => () => send({ name: file.name + '.p' + (x.i + 1) + '.jpg', mime: 'image/jpeg', b64: x.b64, hint: 'scanned bank/card statement page ' + (x.i + 1) },
+            'Pages ' + imgs.length + ' (3 at a time)').then(() => upd('🪄 ' + (++doneN) + '/' + imgs.length + ' pages done…'))), 3);
         }
       }
       applyRes(await apiCall('dashboard'));
@@ -882,6 +901,9 @@
         <input name="limit" type="number" placeholder="Credit limit (cards/pay later)" class="full">
         <button class="btn full">Tijori mein daalo 🗝️</button></form>
         <div class="hint">Card, pay-later, loan: number = jitna abhi dena hai.</div></div>
+      <div class="card" style="position:relative">${stk('🔐', 'Locker', -5, 'right:10px;top:-8px', 'lime')}<h2>🏦 Bank details locker</h2>
+        <div class="sub" style="margin-bottom:8px">Account number, IFSC, branch, UPI, nominee — sab ek jagah, masked. ITR refund account bhi yahin se 🧾<br>Password / PIN / CVV kabhi nahi 🙅</div>
+        <button class="btn" onclick="openBanks()">Bank details kholo 🗝️</button></div>
     </div>`;
   }
 
@@ -1174,13 +1196,13 @@
     }
     const r = CA.report;
     g.textContent = r.label + ' (' + r.ay + ') · ' + (r.current ? 'as on ' + fd2(r.asOn) : 'year ended ' + fd2(r.to));
-    const fn = { ca_over: cOver, ca_day: cDay, ca_led: cLed, ca_tb: cTB, ca_pl: cPL, ca_bs: cBS, ca_itr: cITR, ca_an: cAn, ca_imp: cImp }[CATAB] || cOver;
+    const fn = { ca_over: cOver, ca_day: cDay, ca_led: cLed, ca_tb: cTB, ca_pl: cPL, ca_bs: cBS, ca_itr: cITR, ca_an: cAn, ca_bank: cBank, ca_imp: cImp }[CATAB] || cOver;
     document.getElementById('app').innerHTML = '<section class="on">' + caBar() + fn() + '</section>';
   }
   function caBar() {
     return `<div class="ca-bar"><select onchange="caFy(this.value)">${CA.fys.map(f => `<option value="${f.y}" ${f.y === CA.fy ? 'selected' : ''}>${f.label} · ${f.ay}</option>`).join('')}</select>
       <button class="ghost" onclick="caReload()">↻ Refresh</button><button class="ghost" onclick="caCSV()">⬇ CSV</button>
-      <button class="ghost" onclick="caExport()">📤 Export to Google Sheets</button>
+      <button class="ghost" onclick="caExport()">📤 Export to Google Sheets</button><button class="ghost" onclick="caPdf()">📄 PDF report</button>
       <span class="sub" style="margin-left:auto">${esc(CA_TITLES[CATAB] || '')}</span></div>`;
   }
 
@@ -1310,7 +1332,44 @@
   }
 
   /* Income & expenditure / P&L */
-  function cPL() {
+  /* Classic (horizontal / T-form) statements */
+  function viewToggle() {
+    return `<div class="ca-bar"><div class="seg"><button class="${CLASSIC ? 'on' : ''}" onclick="setClassic(true)">Classic (T-form)</button><button class="${CLASSIC ? '' : 'on'}" onclick="setClassic(false)">Vertical</button></div></div>`;
+  }
+  function setClassic(on) { CLASSIC = on; store.set('classic', on ? 'on' : 'off'); render(); }
+  function pairRows(a, b) { const n = Math.max(a.length, b.length), o = []; for (let i = 0; i < n; i++) o.push([a[i] || null, b[i] || null]); return o; }
+  function classicBS() {
+    const bs = CA.report.bs, L = [], A = [];
+    L.push(['Capital Account', '', '', 'h'], ['Opening balance', bs.capital.open, '', 'i'], ['Add: Surplus / (Deficit) for the year', bs.capital.surplus, '', 'i'], ['', '', bs.capital.close, 's']);
+    const side = (rows, out) => { const by = {}; rows.forEach(x => { (by[x.sec] = by[x.sec] || []).push(x); });
+      Object.keys(by).forEach(s => { out.push([s, '', '', 'h']); by[s].forEach(x => out.push([x.name, x.amt, '', 'i', x.key])); out.push(['', '', by[s].reduce((a, x) => a + x.amt, 0), 's']); }); };
+    side(bs.liabilities, L); side(bs.assets, A);
+    const td = x => !x ? '<td></td><td></td><td></td>' : `<td class="${x[3] === 'h' ? 'hd' : ''}" ${x[4] ? `style="padding-left:16px;cursor:pointer" onclick="LEDSEL='${jsq(x[4])}';go('ca_led')"` : x[3] === 'i' ? 'style="padding-left:16px"' : ''}>${esc(x[0])}</td><td class="n">${x[1] === '' ? '' : fa(x[1])}</td><td class="n ${x[3] === 's' ? 'b' : ''}">${x[2] === '' ? '' : fa(x[2])}</td>`;
+    return `<div class="card" style="margin-top:12px"><h2>Balance Sheet as at ${fd2(CA.report.asOn)}</h2>
+      <div class="tbl-wrap"><table class="tbl classic"><tr><th>Liabilities</th><th class="n">₹</th><th class="n">₹</th><th>Assets</th><th class="n">₹</th><th class="n">₹</th></tr>
+      ${pairRows(L, A).map(p => `<tr>${td(p[0])}${td(p[1])}</tr>`).join('')}
+      <tr class="tot"><td>Total</td><td></td><td class="n">${fa(bs.totalLiab)}</td><td>Total</td><td></td><td class="n">${fa(bs.totalAssets)}</td></tr></table></div>
+      <div class="hint">${Math.abs(bs.diff) < 0.01 ? '<span class="ok">Tallied ✓</span>' : '<span class="neg">Difference ' + fa(bs.diff) + '</span>'} · tap a ledger to open it</div></div>`;
+  }
+  function classicIE() {
+    const ie = CA.report.ie, p = ie.biz.profit, Dr = ie.expense.map(x => ['To ' + x.name, x.amt]), Cr = ie.income.map(x => ['By ' + x.name, x.amt]);
+    if (p > 0) Cr.push(['By Net profit from business / profession', p]); else if (p < 0) Dr.push(['To Net loss from business / profession', -p]);
+    if (ie.surplus > 0) Dr.push(['To Surplus transferred to Capital A/c', ie.surplus]); else if (ie.surplus < 0) Cr.push(['By Deficit transferred to Capital A/c', -ie.surplus]);
+    const tbl = (dr, cr, title) => `<div class="card" style="margin-top:12px"><h2>${title}</h2><div class="tbl-wrap"><table class="tbl classic"><tr><th>Dr — Particulars</th><th class="n">₹</th><th>Cr — Particulars</th><th class="n">₹</th></tr>
+      ${pairRows(dr, cr).map(x => `<tr><td>${x[0] ? esc(x[0][0]) : ''}</td><td class="n">${x[0] ? fa(x[0][1]) : ''}</td><td>${x[1] ? esc(x[1][0]) : ''}</td><td class="n">${x[1] ? fa(x[1][1]) : ''}</td></tr>`).join('')}
+      <tr class="tot"><td>Total</td><td class="n">${fa(dr.reduce((s, x) => s + x[1], 0))}</td><td>Total</td><td class="n">${fa(cr.reduce((s, x) => s + x[1], 0))}</td></tr></table></div></div>`;
+    let h = '';
+    if (ie.biz.receipts || ie.biz.totalExp) {
+      const bd = ie.biz.expenses.map(x => ['To ' + x.name, x.amt]), bc = [['By Gross receipts', ie.biz.receipts]];
+      if (p >= 0) bd.push(['To Net profit c/d', p]); else bc.push(['By Net loss c/d', -p]);
+      h += tbl(bd, bc, 'Profit & Loss Account — business / profession, year ended ' + fd2(CA.report.to));
+    }
+    return h + tbl(Dr, Cr, 'Income & Expenditure Account for the year ended ' + fd2(CA.report.to));
+  }
+  function cPL() { return viewToggle() + (CLASSIC ? classicIE() : cPLV()); }
+  function cBS() { return viewToggle() + (CLASSIC ? classicBS() : cBSV()); }
+
+  function cPLV() {
     const ie = CA.report.ie, inv = CA.analytics.totals.inv, hasBiz = ie.biz.receipts || ie.biz.totalExp;
     const line = (n, a, cls) => `<tr class="${cls || ''}"><td>${n}</td><td class="n">${fa(a)}</td></tr>`;
     let h = '';
@@ -1324,7 +1383,7 @@
   }
 
   /* Balance sheet */
-  function cBS() {
+  function cBSV() {
     const bs = CA.report.bs, r = CA.report;
     const sec = rows => { const by = {}; rows.forEach(x => { (by[x.sec] = by[x.sec] || []).push(x); });
       return Object.keys(by).map(s => `<tr class="sec"><td>${esc(s)}</td><td class="n">${fa(by[s].reduce((a, x) => a + x.amt, 0))}</td></tr>` +
@@ -1374,10 +1433,88 @@
         ${t.rules.nw ? `<div class="sub" style="margin-top:8px"><b>New regime</b> — standard deduction ${fa(t.rules.nw.sd)}, 87A rebate up to income ${fa(t.rules.nw.rebateLimit)} (max ${fa(t.rules.nw.rebateMax)})<br>${slabTxt(t.rules.nw.slabs)}</div>` : ''}
         <div class="sub" style="margin-top:8px">Capital gains: 111A ${pctS(t.rules.cg.stcg)} · 112A ${pctS(t.rules.cg.ltcg)} above ${fa(t.rules.cg.ltcgExempt)} · 112 ${pctS(t.rules.cg.ltcgOther)}${t.rules.assumed ? '<br><b>Rates for this year are assumed — verify.</b>' : ''}</div></div></div>
     ${t.warnings.length ? `<div class="card" style="margin-top:12px"><h2>Points to check</h2>${t.warnings.map(w => `<div class="row"><span>• ${esc(w)}</span></div>`).join('')}</div>` : ''}
+    ${t.advance && t.advance.applicable ? `<div class="card" style="margin-top:12px"><h2>Advance tax schedule — estimated liability ${fa(t.advance.liability)}</h2><div class="tbl-wrap"><table class="tbl">
+      <tr><th>Due by</th><th class="n">Cumulative</th><th class="n">Required</th><th class="n">Paid</th><th class="n">Shortfall</th></tr>
+      ${t.advance.rows.map(r => `<tr><td>${fd2(r.due)}</td><td class="n">${Math.round(r.pct * 100)}%</td><td class="n">${fa(r.required)}</td><td class="n">${fa(r.paid)}</td><td class="n ${r.shortfall > 0 ? 'neg' : 'pos'}">${fa(r.shortfall)}</td></tr>`).join('')}</table></div>
+      <div class="hint">Payments tagged "Advance / self-assessment tax" in the Day Book count here. Interest u/s 234B / 234C applies on shortfalls. The bot reminds you on the 10th of Jun, Sep, Dec and Mar.</div></div>`
+      : `<div class="card" style="margin-top:12px"><h2>Advance tax</h2><div class="sub">${t.advance && t.advance.exempt ? 'Not required — senior citizen without business income (sec 207).' : 'Not required — estimated liability after TDS is below ₹10,000.'}</div></div>`}
+    <div class="card" style="margin-top:12px"><h2>Bank accounts for the return</h2>${(t.banks || []).length ? `<table class="tbl"><tr><th>Bank</th><th>IFSC</th><th>Account</th><th>Refund</th></tr>${t.banks.map(b => `<tr><td>${esc(b.bank)}<div class="sub">${esc(b.type)}</div></td><td>${esc(b.ifsc)}</td><td>${esc(b.acc)}</td><td>${b.refund ? '✓' : ''}</td></tr>`).join('')}</table>` : '<div class="sub">No bank details yet.</div>'}
+      <button class="ghost" style="margin-top:8px" onclick="go('ca_bank')">Manage bank accounts →</button></div>
+    <div class="card" style="margin-top:12px"><h2>Assessee profile</h2><div class="setf">
+      <label class="sub">Name<input id="pfName" value="${esc(t.profile.name)}" autocomplete="off"></label>
+      <label class="sub">PAN ${t.profile.panMasked ? '(saved: ' + esc(t.profile.panMasked) + ')' : ''}<input id="pfPan" placeholder="${t.profile.pan ? 'leave blank to keep' : 'ABCDE1234F'}" autocomplete="off" maxlength="10" style="text-transform:uppercase"></label>
+      <label class="sub">Residential status<select id="pfStatus">${['Resident', 'Resident but not ordinarily resident', 'Non-resident'].map(x => `<option ${x === t.profile.status ? 'selected' : ''}>${x}</option>`).join('')}</select></label></div>
+      <button class="ghost" style="margin-top:8px" onclick="caSaveProfile()">Save profile</button><div class="hint">Shown (PAN masked) on the PDF report and exported books.</div></div>
     <div class="card" style="margin-top:12px"><h2>Tax settings — ${esc(t.label)}</h2><div class="sub" style="margin-bottom:8px">From Form 16, AIS / TIS / 26AS, broker capital-gains statement and certificates. Leave blank to use the auto figure.</div>
       <div class="setf">${t.fields.map(field).join('')}</div><button class="btn" style="margin-top:10px" onclick="caSaveSet()">Save & recompute</button></div>
     <div class="card" style="margin-top:12px"><h2>Notes</h2>${t.notes.map(x => `<div class="sub" style="margin:4px 0">• ${esc(x)}</div>`).join('')}</div>`;
   }
+  function caSaveProfile() {
+    const pan = document.getElementById('pfPan').value.trim().toUpperCase();
+    const profile = { name: document.getElementById('pfName').value.trim(), pan: pan || CA.itr.profile.pan, status: document.getElementById('pfStatus').value };
+    apiCall('caProfile', { fy: CA.fy, profile: profile }).then(res => { CA = res.ca; render(); showVibe('Profile saved.', null, 'Saved'); }).catch(caErr);
+  }
+  function caPdf() {
+    if (!CA) return;
+    showVibe('Preparing the PDF report… (15–40 s)', null, 'PDF');
+    apiCall('caPdf', { fy: CA.fy }).then(res => {
+      hideVibe();
+      openModal(`<h3>PDF report ready</h3><div class="sub" style="margin:6px 0 12px">${esc(res.name)} — cover, key figures, classic Balance Sheet and Income & Expenditure, Trial Balance, tax computation with schedules, advance tax, bank accounts and analytics. Saved in Drive → Kaha Gaya Mera Paisa — Reports.</div>
+        <a class="btn" style="display:block;text-align:center;text-decoration:none" href="${esc(res.url)}" target="_blank" rel="noopener">Open PDF</a>
+        <div class="hint">Telegram: /report ${CA.fy} sends it to the bot chat.</div>
+        <button class="ghost" style="margin-top:10px;width:100%" onclick="closeModal()">Close</button>`);
+    }).catch(caErr);
+  }
+
+  /* Bank details — stored in the BankDetails sheet; numbers masked until tapped; never passwords / PINs / CVV */
+  function loadBanks(cb) { apiCall('banks', {}).then(res => { BANKS = res.banks || []; cb && cb(); }).catch(e => { BANKS = []; caErr(e); cb && cb(); }); }
+  function cBank() {
+    if (!BANKS) { loadBanks(() => { if (MODE === 'ca' && CATAB === 'ca_bank') render(); }); return '<div class="loader"><b>🏦</b>Loading bank details…</div>'; }
+    return '<div class="card" style="margin-top:12px">' + bankHtml() + '</div>';
+  }
+  function bankHtml() {
+    const list = BANKS || [];
+    const row = b => {
+      const show = BANKSHOW[b.row];
+      const num = show ? esc(b.accountNo) : (b.accountNo ? 'XXXX' + esc(b.accountNo.slice(-4)) : '—');
+      return `<div class="bankrow"><div class="flex" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0"><b>${esc(b.bank)}</b> <span class="sub">${esc(b.type)}${b.account ? ' · linked to ' + esc(b.account) : ''}${b.refund ? ' · <b>refund account</b>' : ''}</span>
+        <div class="mono">A/c ${num} <button class="ghost" style="padding:1px 7px" onclick="BANKSHOW[${b.row}]=!BANKSHOW[${b.row}];bankRefresh()">${show ? 'Hide' : 'Show'}</button>${show && b.accountNo ? ` <button class="ghost" style="padding:1px 7px" onclick="copyTxt('${jsq(b.accountNo)}')">Copy</button>` : ''}</div>
+        <div class="sub">IFSC ${esc(b.ifsc || '—')}${b.ifsc ? ` <button class="ghost" style="padding:1px 7px" onclick="copyTxt('${jsq(b.ifsc)}')">Copy</button>` : ''}${b.branch ? ' · ' + esc(b.branch) : ''}</div>
+        <div class="sub">${[b.holder && 'Holder: ' + b.holder, b.customerId && 'Cust ID: ' + (show ? b.customerId : 'XXXX' + b.customerId.slice(-3)), b.upi && 'UPI: ' + b.upi, b.nominee && 'Nominee: ' + b.nominee].filter(Boolean).map(esc).join(' · ')}</div>
+        ${b.notes ? `<div class="sub">${esc(b.notes)}</div>` : ''}</div>
+        <div style="display:flex;gap:4px;flex:none"><button class="ghost" onclick="BANKEDIT=${b.row};bankRefresh()">Edit</button><button class="ghost" onclick="bankDelete(${b.row},'${jsq(b.accountNo)}')">✕</button></div></div></div>`;
+    };
+    const e = list.find(b => b.row === BANKEDIT) || {};
+    const f = (id, label, val, ph) => `<label class="sub">${label}<input id="bk_${id}" value="${esc(val || '')}" placeholder="${ph || ''}" autocomplete="off"></label>`;
+    const accs = (D && D.accounts) || [];
+    const form = `<h2 style="margin-top:14px">${BANKEDIT ? 'Edit bank account' : 'Add bank account'}</h2><div class="setf">
+      ${f('bank', 'Bank name *', e.bank, 'HDFC Bank')}${f('holder', 'Account holder', e.holder)}${f('accountNo', 'Account number', e.accountNo, 'digits only')}
+      ${f('ifsc', 'IFSC', e.ifsc, 'HDFC0001234')}${f('branch', 'Branch', e.branch)}
+      <label class="sub">Account type<select id="bk_type">${['Savings', 'Current', 'Salary', 'OD / CC', 'NRE', 'NRO', 'FD / RD', 'Other'].map(x => `<option ${x === (e.type || 'Savings') ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
+      <label class="sub">Linked app account<select id="bk_account"><option value="">—</option>${accs.map(a => `<option ${a.name === e.account ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></label>
+      ${f('customerId', 'Customer ID', e.customerId)}${f('upi', 'UPI ID', e.upi, 'name@bank')}${f('nominee', 'Nominee', e.nominee)}${f('notes', 'Notes', e.notes)}
+      <label class="sub" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="bk_refund" style="width:auto" ${e.refund ? 'checked' : ''}> Use for income-tax refund</label></div>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" onclick="bankSave()">${BANKEDIT ? 'Save changes' : 'Add account'}</button>${BANKEDIT ? '<button class="ghost" onclick="BANKEDIT=null;bankRefresh()">Cancel</button>' : ''}</div>
+      <div class="hint">🔒 Stored only in your own Google Sheet (BankDetails tab). Never store passwords, PINs, CVV or OTPs here — the app refuses them.</div>`;
+    return `<h2>Bank accounts</h2>${list.length ? list.map(row).join('') : '<div class="sub">No bank accounts saved yet.</div>'}${form}`;
+  }
+  function bankRefresh() { if (MODE === 'ca' && CATAB === 'ca_bank') render(); else { const b = document.getElementById('bankBox'); if (b) b.innerHTML = bankHtml(); } }
+  function openBanks() {
+    openModal('<div id="bankBox"><div class="loader"><b>🏦</b>Loading…</div></div><button class="ghost" style="margin-top:10px;width:100%" onclick="closeModal()">Close</button>');
+    loadBanks(bankRefresh);
+  }
+  function bankSave() {
+    const v = id => (document.getElementById('bk_' + id) || {}).value || '';
+    const d = { row: BANKEDIT || '', bank: v('bank'), holder: v('holder'), accountNo: v('accountNo'), ifsc: v('ifsc').toUpperCase(), branch: v('branch'), type: v('type'),
+      account: v('account'), customerId: v('customerId'), upi: v('upi'), nominee: v('nominee'), notes: v('notes'), refund: document.getElementById('bk_refund').checked };
+    apiCall('saveBank', d).then(res => { BANKS = res.banks; BANKEDIT = null; bankRefresh(); showVibe('Bank details saved.', MODE === 'ca' ? null : '🏦', 'Saved'); if (CA) apiCall('ca', { fy: CA.fy }).then(r => { CA = r.ca; }).catch(() => {}); }).catch(e => showVibe(errText(e), null, 'Error'));
+  }
+  function bankDelete(row, acc) {
+    if (!confirm('Remove this bank account from the BankDetails sheet?')) return;
+    apiCall('deleteBank', { row: row, accountNo: acc }).then(res => { BANKS = res.banks; bankRefresh(); }).catch(e => showVibe(errText(e), null, 'Error'));
+  }
+  function copyTxt(s) { try { navigator.clipboard.writeText(s); showVibe('Copied.', null, 'Copied'); } catch (e) { prompt('Copy:', s); } }
+
   function caSaveSet() {
     const s = {};
     document.querySelectorAll('[data-f]').forEach(el => { s[el.getAttribute('data-f')] = el.value; });
