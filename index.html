@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="utf-8">
+<title>Kaha Gaya Mera Paisa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Filmy, Gen-Z money tracker. Free forever.">
+<meta name="theme-color" content="#7c3aed">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mera Paisa">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f4ff; --card: #ffffff; --card2: #f1eeff; --text: #15121f; --muted: #6d6880; --line: #e6e1f5;
+    --accent: #7c3aed; --accent2: #ec4899; --lime: #65a30d; --green: #059669; --red: #e11d48; --amber: #d97706;
+    --glow: 0 8px 30px rgba(124, 58, 237, .12);
+    --grad: linear-gradient(135deg, #7c3aed 0%, #ec4899 55%, #f59e0b 100%);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0a10; --card: #15131d; --card2: #1d1a28; --text: #f3f0ff; --muted: #9b95b0; --line: #2a2638;
+    --accent: #a78bfa; --accent2: #f472b6; --lime: #bef264; --green: #34d399; --red: #fb7185; --amber: #fbbf24;
+    --glow: 0 8px 30px rgba(167, 139, 250, .10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b0a10; --card: #15131d; --card2: #1d1a28; --text: #f3f0ff; --muted: #9b95b0; --line: #2a2638;
+      --accent: #a78bfa; --accent2: #f472b6; --lime: #bef264; --green: #34d399; --red: #fb7185; --amber: #fbbf24;
+      --glow: 0 8px 30px rgba(167, 139, 250, .10);
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font: 15px/1.45 "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding-bottom: 90px; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 14px 16px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .logo { font-weight: 700; font-size: 19px; letter-spacing: -.02em; }
+  .logo span { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .greet { color: var(--muted); font-size: 13px; }
+  .iconbtn { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 7px 10px; cursor: pointer; font-size: 16px; color: var(--text); }
+  .logo { white-space: nowrap; }
+  @media (max-width: 420px) { .logo { font-size: 16px; } .iconbtn { padding: 6px 8px; font-size: 15px; } header { gap: 6px; } }
+  nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: color-mix(in srgb, var(--card) 92%, transparent);
+    backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); }
+  nav .in { display: flex; gap: 2px; overflow-x: auto; max-width: 1080px; margin: 0 auto; scrollbar-width: none; }
+  nav .in::-webkit-scrollbar { display: none; }
+  nav button { flex: 1 0 64px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 11px; padding: 6px 4px; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  nav button b { font-size: 20px; font-weight: 400; line-height: 1; }
+  nav button.on { color: var(--text); background: var(--card2); }
+  @media (min-width: 900px) { nav { top: auto; } }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+  h3 { margin: 0 0 4px; font-size: 22px; letter-spacing: -.02em; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); margin-top: 12px; }
+  .stats { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-top: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px; min-width: 0; box-shadow: var(--glow); }
+  .hero { background: var(--grad); color: #fff; border: 0; padding: 18px; position: relative; overflow: hidden; }
+  .hero .l { opacity: .85; font-size: 13px; }
+  .hero .nw { font-size: 34px; font-weight: 700; letter-spacing: -.03em; }
+  .hero .row2 { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px; font-size: 13px; opacity: .95; }
+  .hero::after { content: "💸"; position: absolute; right: -6px; top: -10px; font-size: 90px; opacity: .18; transform: rotate(15deg); }
+  .stat .v { font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+  .stat .l { color: var(--muted); font-size: 12.5px; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .sub { color: var(--muted); font-size: 12.5px; }
+  .pos { color: var(--green); } .neg { color: var(--red); } .warn { color: var(--amber); }
+  .bar { height: 9px; background: var(--card2); border-radius: 99px; overflow: hidden; margin-top: 5px; }
+  .bar > i { display: block; height: 100%; background: var(--grad); border-radius: 99px; transition: width .6s; }
+  .bar.red > i { background: var(--red); } .bar.amber > i { background: var(--amber); }
+  input, select, textarea, button { font: inherit; color: var(--text); }
+  input, select, textarea { background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 11px; width: 100%; min-width: 0; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+  .btn { background: var(--grad); color: #fff; border: 0; font-weight: 600; cursor: pointer; border-radius: 12px; padding: 10px 14px; }
+  .btn:active { transform: scale(.97); }
+  .ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 4px 9px; cursor: pointer; font-size: 12.5px; }
+  .ghost:hover { color: var(--text); border-color: var(--accent); }
+  .quick { display: flex; gap: 8px; margin-top: 12px; }
+  .quick input { font-size: 16px; padding: 13px 14px; border-radius: 14px; }
+  form.f { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+  form.f .full { grid-column: 1 / -1; }
+  .chip { display: inline-block; background: var(--card2); border-radius: 999px; padding: 1px 9px; font-size: 12px; color: var(--muted); }
+  .tag { display: inline-block; border-radius: 999px; padding: 1px 8px; font-size: 11.5px; background: var(--card2); }
+  details summary { cursor: pointer; color: var(--accent); margin: 10px 0 6px; font-weight: 600; }
+  .muted { color: var(--muted); }
+  .empty { color: var(--muted); text-align: center; padding: 18px 6px; }
+  .empty b { display: block; font-size: 34px; margin-bottom: 6px; }
+  section { display: none; animation: pop .25s ease; } section.on { display: block; }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  /* vibe popup */
+  #vibe { position: fixed; z-index: 50; left: 50%; top: 14px; transform: translate(-50%, -140%); width: min(460px, calc(100% - 24px));
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 12px 14px; display: flex; gap: 12px; align-items: center;
+    box-shadow: 0 18px 50px rgba(0,0,0,.25); transition: transform .35s cubic-bezier(.2,1.3,.4,1); }
+  #vibe.show { transform: translate(-50%, 0); }
+  #vibe .e { font-size: 30px; animation: wob 1s ease infinite alternate; }
+  #vibe .t { flex: 1; font-weight: 500; }
+  #vibe .k { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }
+  #vibe::before { content: ""; position: absolute; inset: 0; border-radius: 18px; padding: 1.5px; background: var(--grad);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+  @keyframes wob { from { transform: rotate(-8deg) scale(1); } to { transform: rotate(8deg) scale(1.1); } }
+  .rain { position: fixed; top: -40px; z-index: 60; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); opacity: .9; } }
+  /* charts */
+  .donut { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .donut svg { width: 150px; height: 150px; flex: none; }
+  .legend { flex: 1; min-width: 150px; font-size: 13px; }
+  .legend div { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .trend { display: flex; align-items: flex-end; gap: 8px; height: 150px; }
+  .trend .m { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .trend .pair { display: flex; gap: 3px; align-items: flex-end; height: 120px; }
+  .trend .pair i { width: 12px; border-radius: 4px 4px 0 0; display: block; min-height: 2px; }
+  .heat { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; gap: 3px; overflow-x: auto; padding-bottom: 4px; }
+  .heat i { width: 13px; height: 13px; border-radius: 3px; background: var(--card2); display: block; }
+  .streaks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .streaks .s { background: var(--card2); border-radius: 14px; padding: 12px; text-align: center; }
+  .streaks .s b { display: block; font-size: 28px; }
+  /* goals */
+  .ring { width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center; flex: none;
+    background: conic-gradient(var(--accent) calc(var(--p) * 1%), var(--card2) 0); }
+  .ring span { width: 58px; height: 58px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 24px; }
+  /* wrapped */
+  .story { border-radius: 22px; padding: 20px; color: #fff; min-height: 150px; display: flex; flex-direction: column; justify-content: space-between; border: 0; }
+  .story .big { font-size: 30px; font-weight: 700; letter-spacing: -.03em; line-height: 1.1; }
+  .story .lab { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; opacity: .85; }
+  .g1 { background: linear-gradient(135deg, #7c3aed, #ec4899); } .g2 { background: linear-gradient(135deg, #0ea5e9, #6366f1); }
+  .g3 { background: linear-gradient(135deg, #f59e0b, #ef4444); } .g4 { background: linear-gradient(135deg, #10b981, #0ea5e9); }
+  .g5 { background: linear-gradient(135deg, #111827, #7c3aed); } .g6 { background: linear-gradient(135deg, #db2777, #f59e0b); }
+  .seg { display: inline-flex; background: var(--card2); border-radius: 12px; padding: 3px; gap: 3px; }
+  .seg button { border: 0; background: none; padding: 6px 12px; border-radius: 9px; cursor: pointer; color: var(--muted); font: inherit; }
+  .seg button.on { background: var(--card); color: var(--text); box-shadow: var(--glow); }
+  .badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .badge { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px; text-align: center; }
+  .badge b { font-size: 36px; display: block; }
+  .badge.lock { opacity: .45; filter: grayscale(1); }
+  .badge .n { font-weight: 700; margin-top: 4px; } .badge .d { font-size: 12px; color: var(--muted); }
+  /* modal */
+  #modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 40; display: none; align-items: flex-end; justify-content: center; }
+  #modal.show { display: flex; }
+  #modal .box { background: var(--card); width: min(520px, 100%); border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); max-height: 90vh; overflow: auto; }
+  @media (min-width: 700px) { #modal { align-items: center; } #modal .box { border-radius: 22px; } }
+  .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 10px 0; }
+  .day { font-size: 12px; color: var(--muted); font-weight: 600; margin: 12px 0 2px; text-transform: uppercase; letter-spacing: .06em; }
+  .loader { text-align: center; padding: 60px 10px; color: var(--muted); }
+  .loader b { font-size: 46px; display: block; animation: wob .6s ease infinite alternate; }
+  .acc-ic { width: 38px; height: 38px; border-radius: 12px; background: var(--card2); display: grid; place-items: center; font-size: 19px; flex: none; }
+  .flex { display: flex; gap: 10px; align-items: center; min-width: 0; }
+  .flex > div { min-width: 0; }
+  .ellip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .drop { display: block; border: 2px dashed var(--accent); border-radius: 18px; padding: 26px 14px; text-align: center; cursor: pointer;
+    background: var(--card2); transition: transform .15s, background .15s; }
+  .drop:hover, .drop.over { transform: scale(1.01); background: color-mix(in srgb, var(--accent) 12%, var(--card2)); }
+  .drop b { display: block; font-size: 44px; margin-bottom: 6px; }
+  .imp { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .imp:last-child { border-bottom: 0; }
+  .imp .st { font-size: 20px; flex: none; }
+  .imp pre { white-space: pre-wrap; font: inherit; font-size: 12.5px; color: var(--muted); margin: 4px 0 0; }
+  .spin { display: inline-block; animation: wob .5s ease infinite alternate; }
+  /* stickers (Insta-style) */
+  #sticker { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 70; }
+  #sticker .s { opacity: 0; text-align: center; }
+  #sticker.show .s { animation: stick 2.3s cubic-bezier(.2,1.4,.4,1) forwards; }
+  @keyframes stick { 0% { transform: scale(0) rotate(-25deg); opacity: 0 } 14% { transform: scale(1.18) rotate(7deg); opacity: 1 }
+    24% { transform: scale(1) rotate(-5deg) } 80% { transform: scale(1) rotate(-5deg); opacity: 1 } 100% { transform: scale(.6) rotate(12deg) translateY(-60px); opacity: 0 } }
+  .stk-e { font-size: 112px; line-height: 1; filter: drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff) drop-shadow(0 12px 18px rgba(0,0,0,.35)); }
+  .stk-t { display: inline-block; margin-top: 8px; font: 400 27px/1.05 Anton, Impact, "Arial Black", sans-serif; letter-spacing: .03em; text-transform: uppercase;
+    color: #fff; background: #111; padding: 6px 14px 7px; border-radius: 12px; border: 3px solid #fff; transform: rotate(-4deg); box-shadow: 0 8px 0 rgba(0,0,0,.18); max-width: 82vw; }
+  .stk { position: absolute; z-index: 2; font: 400 13px/1 Anton, Impact, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #111; background: #fff;
+    padding: 6px 9px 6px 7px; border-radius: 10px; transform: rotate(var(--r, -6deg)); box-shadow: 0 4px 0 rgba(0,0,0,.18); white-space: nowrap; pointer-events: none; }
+  .stk.dark { background: #111; color: #fff; border: 2px solid #fff; }
+  .stk.lime { background: #d9f99d; } .stk.pink { background: #fbcfe8; } .stk.yellow { background: #fde68a; }
+  .meme-font { font-family: Anton, Impact, sans-serif; letter-spacing: .02em; text-transform: uppercase; }
+  .aura-card { position: relative; overflow: hidden; }
+  .aura-card .big { font: 400 44px/1 Anton, Impact, sans-serif; letter-spacing: .01em; }
+  .aura-card .glow { position: absolute; right: -30px; top: -30px; font-size: 120px; opacity: .14; transform: rotate(14deg); }
+  .pov { background: var(--card2); border-radius: 16px; padding: 12px 14px; margin: 8px 0; white-space: pre-line; position: relative; }
+  .pov .who { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+  .pov .who b { font-size: 22px; } .pov .who .h { color: var(--muted); }
+  .pov .txt { font-size: 15.5px; font-weight: 500; }
+  .pov .eng { display: flex; gap: 16px; color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+  .ticker { overflow: hidden; white-space: nowrap; margin-top: 10px; border-radius: 12px; background: #111; color: #fff; font-size: 13px; padding: 7px 0; }
+  .ticker span { display: inline-block; padding-left: 100%; animation: tick 38s linear infinite; }
+  @keyframes tick { to { transform: translateX(-100%); } }
+  .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--card2); color: var(--muted); margin-left: 6px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="logo">💸 <span>Kaha Gaya Mera Paisa</span></div>
+      <div class="greet" id="greet">Paisa dhoondh rahe hain… 🕵️</div>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="iconbtn" id="vibeBtn" title="Vibe pop-ups on/off" onclick="toggleVibe()">🎬</button>
+      <button class="iconbtn" id="installBtn" title="Install app" onclick="installApp()" style="display:none">📲</button>
+      <button class="iconbtn" id="themeBtn" title="Theme" onclick="toggleTheme()">🌗</button>
+    </div>
+  </header>
+
+  <div class="quick">
+    <input id="q" autocomplete="off" placeholder="250 swiggy">
+    <button class="btn" onclick="quick()">Add</button>
+  </div>
+  <div class="hint" id="qhint">Bas type kar jaise dost ko bolta hai ✍️</div>
+
+  <div id="app"><div class="loader"><b>💸</b>Kaha gaya mera paisa… dhoondh rahe hain</div></div>
+</div>
+
+<nav><div class="in" id="nav"></div></nav>
+<div id="sticker"><div class="s"><div class="stk-e" id="stkE">✨</div><div class="stk-t" id="stkT">Main character</div></div></div>
+<div id="vibe"><div class="e" id="vibeE">🎬</div><div style="flex:1"><div class="k" id="vibeK">Vibe check</div><div class="t" id="vibeT"></div></div><button class="ghost" onclick="hideVibe()">✕</button></div>
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="box" id="modalBox"></div></div>
+
+<script>
+  /* NOTE for future edits: Apps Script strips JS comments from this file, and its stripper is not string-aware.
+     Never write a slash-star or a double slash inside a string, template or regex in the script below
+     (e.g. accept="image/" + star, or "https:" + two slashes) — it cuts the code and the app crashes. */
+  window.onerror = function (m, s, l, c) {
+    var a = document.getElementById('app');
+    if (a) a.innerHTML = '<div class="loader"><b>😵</b>Oops, app crash: ' + String(m).replace(/</g, '&lt;') + ' (line ' + l + ':' + c + ')<br><span class="sub">Screenshot bhej do, fix kar denge</span></div>';
+  };
+</script>
+<script>
+  const SERVER_KEY = null;
+  const SERVER_API = null; // the /exec URL — used instead of google.script.run, which breaks when several Google accounts are signed in
+  const IS_GAS = !!SERVER_KEY; // true when served by Apps Script, false in the installed app
+  const TABS = [
+    ['home', '🏠', 'Ghar'], ['jaadu', '🪄', 'Jaadu'], ['kharcha', '💸', 'Kharcha'], ['tijori', '🏦', 'Tijori'], ['budget', '🎯', 'Budget'],
+    ['sapne', '🌟', 'Sapne'], ['kist', '⏰', 'EMI/Bills'], ['dost', '🤝', 'Dost'], ['wrapped', '🎬', 'Wrapped'], ['badges', '🏆', 'Badges'],
+  ];
+  const TAB_TITLES = { home: 'Ghar', jaadu: 'Jaadu Scanner', kharcha: 'Kharcha Khata', tijori: 'Tijori', budget: 'Budget Ki Lakshman Rekha', sapne: 'Sapno Ki Gullak',
+    kist: 'Kist & Bills', dost: 'Dost Ledger', wrapped: 'Paisa Wrapped', badges: 'Hall of Fame' };
+  const PALETTE = ['#7c3aed', '#ec4899', '#f59e0b', '#10b981', '#0ea5e9', '#ef4444', '#8b5cf6', '#14b8a6', '#f97316', '#6366f1', '#84cc16', '#a855f7'];
+  const KIND_ICON = { bank: '🏦', cash: '💵', wallet: '👛', investment: '📈', credit_card: '💳', paylater: '⏳', loan: '🏚️' };
+  const EXAMPLES = ['250 swiggy', '+50000 salary hdfc', 'transfer 8000 hdfc to icici cc', 'gave 500 rahul', 'split 1200 dinner with rahul, amit', 'save 500 goa', '999 shoes #regret', '120 auto', 'spent 1499 myntra #worth'];
+  let D = null, TAB = 'home', WMONTH = 0, FILTER = { q: '', type: '', cat: '', acc: '', month: '' };
+
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem('kgmp_' + k); return v === null ? d : v; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('kgmp_' + k, v); } catch (e) {} },
+  };
+  let VIBE = store.get('vibe', 'on') === 'on';
+
+  /* ── utils ── */
+  function inr(n) { n = Number(n) || 0; return (n < 0 ? '-' : '') + '₹' + Math.abs(n).toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
+  function inrS(n) { n = Number(n) || 0; const a = Math.abs(n), s = n < 0 ? '-' : '';
+    return a >= 1e7 ? s + '₹' + (a / 1e7).toFixed(1) + 'Cr' : a >= 1e5 ? s + '₹' + (a / 1e5).toFixed(1) + 'L' : a >= 1e3 ? s + '₹' + (a / 1e3).toFixed(1) + 'k' : inr(n); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function jsq(s) { return esc(String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'")); }
+  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function pct(x) { return Math.round((x || 0) * 100) + '%'; }
+  function fdate(iso, o) { return new Date(iso).toLocaleDateString('en-IN', o || { day: '2-digit', month: 'short' }); }
+  function emo(c) { return (D && D.catEmoji[c]) || '🏷️'; }
+  function empty(e, t) { return '<div class="empty"><b>' + e + '</b>' + t + '</div>'; }
+  function today0() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+
+  /* ── vibe popup + rain ── */
+  let vibeTimer;
+  function showVibe(text, emoji, kicker) {
+    if (!text) return;
+    const m = String(text).match(/^\s*(\p{Extended_Pictographic})/u);
+    document.getElementById('vibeE').textContent = emoji || (m ? m[1] : '🎬');
+    document.getElementById('vibeK').textContent = kicker || 'Vibe check';
+    document.getElementById('vibeT').textContent = text;
+    const v = document.getElementById('vibe');
+    v.classList.add('show');
+    clearTimeout(vibeTimer);
+    vibeTimer = setTimeout(hideVibe, Math.min(7000, 2600 + text.length * 45));
+  }
+  function hideVibe() { document.getElementById('vibe').classList.remove('show'); }
+  function rain(chars, n) {
+    for (let i = 0; i < (n || 26); i++) {
+      const s = document.createElement('div');
+      s.className = 'rain';
+      s.textContent = pick(chars);
+      s.style.left = Math.random() * 100 + 'vw';
+      s.style.fontSize = (16 + Math.random() * 22) + 'px';
+      s.style.animationDuration = (1.6 + Math.random() * 1.8) + 's';
+      s.style.animationDelay = Math.random() * .5 + 's';
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 4200);
+    }
+  }
+  function buzz() { try { navigator.vibrate && navigator.vibrate(18); } catch (e) {} }
+
+  /* ── server: Apps Script (google.script.run) or installed app (fetch to the /exec JSON API) ── */
+  function apiCall(action, data) {
+    data = data || {};
+    if (IS_GAS && !SERVER_API && window.google && google.script && google.script.run) {
+      return new Promise((ok, bad) => google.script.run.withSuccessHandler(ok).withFailureHandler(bad).api(SERVER_KEY, action, data));
+    }
+    const link = IS_GAS ? SERVER_API + '?k=' + encodeURIComponent(SERVER_KEY) : store.get('api', '');
+    if (!link) return Promise.reject(new Error('App connect nahi hai — secret link daalo 🔗'));
+    let u;
+    try { u = new URL(link); } catch (e) { return Promise.reject(new Error('Link galat hai 🙃')); }
+    const k = u.searchParams.get('k'); u.search = ''; u.hash = '';
+    return fetch(u.toString(), { method: 'POST', body: JSON.stringify({ k, action, data }) })
+      .then(r => r.text())
+      .then(t => {
+        let j;
+        try { j = JSON.parse(t); } catch (e) { throw new Error('Server ka jawab ajeeb hai 🤔 Deployment "Anyone" access pe hai? New version deploy kiya?'); }
+        if (j.error) throw new Error(j.error);
+        return j;
+      });
+  }
+  function errText(e) { return String((e && e.message) || e).replace(/^Error:\s*/, ''); }
+  function applyRes(res, after) {
+    const prevBadges = D ? D.badges.filter(b => b.got).length : null;
+    D = res.data; saveCache(); render();
+    if (res.msg) showVibe(res.msg, null, 'Update');
+    if (res.ev) sticker(res.ev);
+    const nowBadges = D.badges.filter(b => b.got).length;
+    if (prevBadges !== null && nowBadges > prevBadges) {
+      const nb = D.badges.filter(b => b.got).slice(-1)[0];
+      setTimeout(() => { showSticker({ e: nb.emoji, t: 'Badge: ' + nb.name }); showVibe('Badge unlocked: ' + nb.name + ' — ' + nb.desc + ' (+250 aura)', nb.emoji, '🏆 Achievement'); rain(['🎉', '✨', '🏆', '🎊']); }, 2400);
+    }
+    if (after) after(res);
+    return res;
+  }
+  function call(action, data, after) {
+    return apiCall(action, data).then(res => applyRes(res, after))
+      .catch(e => { showVibe(errText(e), '🤌', 'Arre bhai bhai bhai'); return null; });
+  }
+  function saveCache() { if (!IS_GAS && D) { try { localStorage.setItem('kgmp_last', JSON.stringify(D)); localStorage.setItem('kgmp_last_at', String(Date.now())); } catch (e) {} } }
+
+  /* ── stickers ── */
+  function showSticker(s) {
+    if (!s || !VIBE) return;
+    const el = document.getElementById('sticker');
+    document.getElementById('stkE').textContent = s.e;
+    document.getElementById('stkT').textContent = s.t;
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+    clearTimeout(window.__stk); window.__stk = setTimeout(() => el.classList.remove('show'), 2400);
+  }
+  function sticker(ev) { const l = D && D.stickers && D.stickers[ev]; if (l && l.length) showSticker(pick(l)); }
+  function stk(e, t, rot, pos, cls) { return `<span class="stk ${cls || ''}" style="--r:${rot}deg;${pos}">${e} ${esc(t)}</span>`; }
+
+  /* ── offline queue (installed app) ── */
+  function queue() { try { return JSON.parse(store.get('queue', '[]')) || []; } catch (e) { return []; } }
+  function setQueue(q) { store.set('queue', JSON.stringify(q)); renderQueuePill(); }
+  function renderQueuePill() { const n = queue().length, el = document.getElementById('qhint'); if (el) el.innerHTML = n ? `📴 ${n} entries offline queue mein — net aate hi sync 🔄` : 'Bas type kar jaise dost ko bolta hai ✍️'; }
+  async function flushQueue() {
+    let q = queue();
+    if (!q.length || IS_GAS || !navigator.onLine) return;
+    let done = 0, res = null;
+    while (q.length) {
+      try { res = await apiCall('quick', { text: q[0], offline: true }); done++; q.shift(); setQueue(q); } catch (e) { if (e instanceof TypeError) break; q.shift(); setQueue(q); }
+    }
+    if (res) applyRes(res);
+    if (done) { showVibe(done + ' offline entries sync ho gayi 📶 We\'re so back!', '🔄', 'Sync'); showSticker({ e: '📶', t: "We're so back" }); }
+  }
+  window.addEventListener('online', flushQueue);
+
+  /* ── install (PWA) ── */
+  let deferredInstall = null;
+  const IS_STANDALONE = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; document.getElementById('installBtn').style.display = ''; });
+  window.addEventListener('appinstalled', () => { document.getElementById('installBtn').style.display = 'none'; showSticker({ e: '📲', t: 'App installed. Slay!' }); });
+  function installApp() {
+    if (deferredInstall) {
+      deferredInstall.prompt();
+      deferredInstall.userChoice.then(() => { deferredInstall = null; document.getElementById('installBtn').style.display = 'none'; });
+    } else {
+      const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      showVibe(ios ? 'iPhone: Safari mein Share ⬆️ → "Add to Home Screen"' : 'Chrome ⋮ menu → "Install app" (ya "Add to Home screen" → Install)', '📲', 'Install');
+    }
+  }
+
+  /* ── theme / vibe toggles ── */
+  function applyTheme() { const t = store.get('theme', ''); if (t) document.documentElement.setAttribute('data-theme', t); else document.documentElement.removeAttribute('data-theme'); }
+  function toggleTheme() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+      (!document.documentElement.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    store.set('theme', dark ? 'light' : 'dark'); applyTheme();
+    showVibe(dark ? 'Light mode — "Roshni ho gayi" ☀️' : 'Dark mode — "Andhera kayam rahe" 🦇', dark ? '☀️' : '🌙', 'Theme');
+  }
+  function toggleVibe() {
+    VIBE = !VIBE; store.set('vibe', VIBE ? 'on' : 'off');
+    document.getElementById('vibeBtn').style.opacity = VIBE ? 1 : .4;
+    showVibe(VIBE ? 'Vibe mode ON — filmy pop-ups wapas 🎬' : 'Vibe mode OFF — "Shanti, shanti" 🧘', VIBE ? '🎬' : '🔇', 'Settings');
+  }
+
+  /* ── navigation ── */
+  function renderNav() {
+    document.getElementById('nav').innerHTML = TABS.map(t =>
+      `<button class="${t[0] === TAB ? 'on' : ''}" onclick="go('${t[0]}')"><b>${t[1]}</b>${t[2]}</button>`).join('');
+  }
+  function go(tab) {
+    TAB = tab; store.set('tab', tab); renderNav(); render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (VIBE && D) showVibe(pick(D.lines.sections[tab]), null, TAB_TITLES[tab]);
+  }
+
+  /* ── main render ── */
+  function render() {
+    if (!D) return;
+    const h = new Date().getHours();
+    const g = D.lines.greet[h < 12 ? 'morning' : h < 17 ? 'afternoon' : h < 21 ? 'evening' : 'night'];
+    document.getElementById('greet').textContent = window.__greet || (window.__greet = pick(g));
+    const fn = { home: vHome, jaadu: vJaadu, kharcha: vKharcha, tijori: vTijori, budget: vBudget, sapne: vSapne, kist: vKist, dost: vDost, wrapped: vWrapped, badges: vBadges }[TAB];
+    document.getElementById('app').innerHTML = '<section class="on">' + fn() + '</section>';
+    if (TAB === 'kharcha') bindFilters();
+  }
+
+  /* ── HOME ── */
+  function vHome() {
+    const s = D.streaks;
+    const cats = Object.entries(D.month.cats).sort((a, b) => b[1] - a[1]);
+    const a = D.aura || { score: 0, tier: 'Loading…', emoji: '⏳', next: null };
+    const apct = a.next ? Math.max(4, Math.min(100, a.score / Math.max(1, a.score + a.next.need) * 100)) : 100;
+    const ticker = [...D.povs.map(p => p.replace(/\n/g, ' ')), ...D.lines.sections.home.slice(-6)].map(t => '🔥 ' + t).join('   •   ');
+    let html = `${cachedNote()}<div class="ticker"><span>${esc(ticker)}</span></div>
+    <div class="card hero" style="margin-top:12px">
+      ${stk(a.emoji, a.tier, 7, 'right:12px;top:12px', 'dark')}
+      <div class="l">👑 Net worth</div><div class="nw">${inr(D.netWorth)}</div>
+      <div class="row2"><span>🏦 Paas: ${inrS(D.assets)}</span><span>💳 Udhaar: ${inrS(D.liabilities)}</span>${D.receivable ? `<span>🤝 Dost denge: ${inrS(D.receivable)}</span>` : ''}</div>
+      <div class="row2" style="margin-top:8px;font-style:italic">${D.netWorth < 0 ? '"Picture abhi baaki hai mere dost" 🎬 — it\'s giving comeback arc' : '"Mere paas balance hai" 😎 — just looking like a wow 🤌'}</div></div>
+    <div class="card aura-card" style="margin-top:12px" onclick="showSticker({e:'${a.emoji}',t:'${esc(a.tier)}'})">
+      <div class="glow">${a.emoji}</div>
+      <div class="flex" style="justify-content:space-between"><div><h2 style="margin:0">✨ Aura points</h2><div class="big">${a.score.toLocaleString('en-IN')}</div></div>
+        <div style="text-align:right"><span class="stk lime" style="position:static;display:inline-block">${a.emoji} ${esc(a.tier)}</span></div></div>
+      <div class="bar"><i style="width:${apct}%"></i></div>
+      <div class="sub" style="margin-top:6px">${a.next ? `Next: ${a.next.emoji} <b>${esc(a.next.name)}</b> — ${a.next.need.toLocaleString('en-IN')} aura door` : 'Max level — GOAT 🐐 "Apun hi bhagwan hai"'}</div>
+      <div class="sub">+aura: tracking, income, investing, no-spend, streaks, goals · −aura: splurges, regrets, 2 AM shopping 🌙</div></div>
+    <div class="stats">
+      ${stat('Aaj ka kharcha', inr(D.today), '🔻')}${stat('Is hafte', inr(D.week), '🗓️')}
+      ${stat('Mahine ka kharcha', inr(D.month.expense), '💸', 'neg')}${stat('Mahine ki income', inr(D.month.income), '🟢', 'pos')}
+    </div>
+    <div class="grid">
+      <div class="card"><h2>⚡ Streaks</h2><div class="streaks">
+        <div class="s"><b>🔥 ${s.log}</b>din logging<div class="sub">best ${s.bestLog}</div></div>
+        <div class="s"><b>🗿 ${s.noSpend}</b>din no-spend<div class="sub">best ${s.bestNoSpend}</div></div></div>
+        <div class="sub" style="margin-top:8px">${s.log >= 7 ? 'Consistency ka baap 🔥 "Jhukega nahi"' : s.log >= 3 ? 'Mast chal raha hai, rukna mat 🏃' : '"Haar ke jeetne wale ko baazigar kehte hain" 🎩 — aaj log kar!'}</div></div>
+      <div class="card"><h2>🕵️ Kaha gaya paisa? (is mahine)</h2>${cats.length ? donut(cats) : empty('🧘', 'Is mahine abhi tak kuch nahi. Sant ho kya?')}</div>
+      <div class="card"><h2>📈 6 mahine ka trailer</h2>${trend()}</div>
+      <div class="card"><h2>🗓️ Kharcha heatmap (20 hafte)</h2>${heat()}<div class="sub" style="margin-top:6px">Jitna dark, utna dard 🥲</div></div>
+      <div class="card"><h2>⏰ Aane wale payments</h2>${D.dues.slice(0, 4).map(dueRow).join('') || empty('🙌', 'Koi EMI ya bill nahi. Azaad panchhi!')}
+        ${D.dues.length > 4 ? `<button class="ghost" onclick="go('kist')">Sab dekho →</button>` : ''}</div>
+      <div class="card"><h2>🎯 Budget check</h2>${D.budgets.slice(0, 4).map(budgetRow).join('') || empty('🚗💨', 'Bina budget ke zindagi, bina brakes ki gaadi')}
+        <button class="ghost" style="margin-top:6px" onclick="go('budget')">Budget set karo →</button></div>
+      <div class="card" style="background:var(--card2);position:relative">${stk('🔥', 'Emotional damage', -6, 'right:10px;top:-8px', 'yellow')}<h2>🔥 Roast of the day</h2><div style="font-size:16px">${esc(pick(D.roast))}</div>
+        <button class="ghost" style="margin-top:10px" onclick="go('wrapped')">Poora roast + Wrapped →</button></div>
+      <div class="card" style="position:relative">${stk('📈', 'Trending', 5, 'right:10px;top:-8px', 'pink')}<h2>📱 Tere wallet ke memes</h2>${memes(3)}
+        <button class="ghost" style="margin-top:6px" onclick="render()">🔄 Aur memes</button></div>
+    </div>
+    <div class="card" style="margin-top:12px"><h2>🧾 Recent kharche</h2>${D.recent.slice(0, 6).map(txRow).join('') || empty('🫙', 'Kuch nahi abhi. Upar type kar: 250 swiggy')}
+      ${D.recent.length > 6 ? `<button class="ghost" onclick="go('kharcha')">Sab kharche →</button>` : ''}</div>`;
+    return html;
+  }
+  function stat(l, v, e, cls) { return `<div class="card stat"><div class="l">${e} ${l}</div><div class="v ${cls || ''}">${v}</div></div>`; }
+  function memes(n) {
+    const pool = D.povs.concat(D.roast).slice().sort(() => Math.random() - .5).slice(0, n);
+    const who = [['🫵', 'Tera Wallet', '@kahagaya_paisa'], ['🧾', 'Bank Statement', '@sach_bolta_hai'], ['🛒', 'Amazon Cart', '@add_to_cart_wala'], ['🍕', 'Swiggy Bhai', '@raat_ka_saathi']];
+    return pool.map((t, i) => { const w = who[i % who.length];
+      return `<div class="pov"><div class="who"><b>${w[0]}</b><div><div><b style="font-size:14px">${w[1]}</b> ✔️</div><div class="h">${w[2]} · ${1 + i * 3}h</div></div></div>
+        <div class="txt">${esc(t)}</div><div class="eng"><span>💬 ${12 + i * 7}</span><span>🔁 ${40 + i * 13}</span><span>❤️ ${(1.2 + i * 0.7).toFixed(1)}k</span><span>📊 ${(9 + i * 4)}k</span></div></div>`; }).join('');
+  }
+  function cachedNote() {
+    if (IS_GAS || !window.__fromCache) return '';
+    const at = Number(store.get('last_at', 0)) || Number((() => { try { return localStorage.getItem('kgmp_last_at'); } catch (e) { return 0; } })());
+    return `<div class="hint">📴 Offline view${at ? ' · last sync ' + new Date(at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</div>`;
+  }
+
+  function donut(cats) {
+    const total = cats.reduce((s, c) => s + c[1], 0);
+    let a = -Math.PI / 2, paths = '';
+    const R = 60, r = 38, cx = 75, cy = 75;
+    cats.forEach((c, i) => {
+      const frac = c[1] / total;
+      if (frac >= 0.9999) { paths += `<circle cx="${cx}" cy="${cy}" r="${(R + r) / 2}" fill="none" stroke="${PALETTE[i % PALETTE.length]}" stroke-width="${R - r}"/>`; return; }
+      const a2 = a + frac * Math.PI * 2, large = frac > .5 ? 1 : 0;
+      const p = (rad, ang) => [cx + rad * Math.cos(ang), cy + rad * Math.sin(ang)];
+      const [x1, y1] = p(R, a), [x2, y2] = p(R, a2), [x3, y3] = p(r, a2), [x4, y4] = p(r, a);
+      paths += `<path d="M${x1},${y1} A${R},${R} 0 ${large} 1 ${x2},${y2} L${x3},${y3} A${r},${r} 0 ${large} 0 ${x4},${y4} Z" fill="${PALETTE[i % PALETTE.length]}"><title>${esc(c[0])}: ${inr(c[1])}</title></path>`;
+      a = a2;
+    });
+    return `<div class="donut"><svg viewBox="0 0 150 150">${paths}<text x="75" y="72" text-anchor="middle" font-size="11" fill="currentColor" opacity=".6">kharcha</text>
+      <text x="75" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="currentColor">${inrS(total)}</text></svg>
+      <div class="legend">${cats.slice(0, 8).map((c, i) => `<div><span><i style="background:${PALETTE[i % PALETTE.length]}"></i>${emo(c[0])} ${esc(c[0])}</span><span>${inrS(c[1])} · ${pct(c[1] / total)}</span></div>`).join('')}</div></div>`;
+  }
+  function trend() {
+    const max = Math.max(1, ...D.trend.map(t => Math.max(t.income, t.expense)));
+    return '<div class="trend">' + D.trend.map(t => `<div class="m" title="${t.label}: in ${inr(t.income)}, out ${inr(t.expense)}"><div class="pair">
+      <i style="height:${t.income / max * 100}%;background:var(--green)"></i><i style="height:${t.expense / max * 100}%;background:var(--accent2)"></i></div>
+      <span class="sub">${t.label}</span></div>`).join('') + '</div><div class="sub"><span class="pos">■</span> Aaya &nbsp; <span style="color:var(--accent2)">■</span> Gaya</div>';
+  }
+  function heat() {
+    const end = today0(), start = new Date(end); start.setDate(start.getDate() - 139);
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    const vals = Object.values(D.heat), max = Math.max(1, ...vals);
+    let cells = '';
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      const v = D.heat[k] || 0, o = v ? .2 + .8 * Math.sqrt(v / max) : 0;
+      cells += `<i title="${fdate(d)}: ${inr(v)}" style="${v ? `background:var(--accent);opacity:${o.toFixed(2)}` : ''}"></i>`;
+    }
+    return `<div class="heat">${cells}</div>`;
+  }
+
+  /* ── rows ── */
+  function txRow(t) {
+    const inn = t.type === 'income' || t.type === 'took', tr = t.type === 'transfer';
+    const label = t.note || t.category;
+    return `<div class="row"><div class="flex"><div class="acc-ic">${t.type === 'gave' ? '🫴' : t.type === 'took' ? '🤲' : tr ? '🔁' : emo(t.category)}</div>
+      <div><div class="ellip">${esc(label)} ${t.vibe === 'regret' ? '😬' : t.vibe === 'worth' ? '😎' : ''}</div>
+      <div class="sub ellip">${fdate(t.date)} · ${esc(t.category)} · ${esc(t.account)}${t.to ? ' → ' + esc(t.to) : ''}${/^sms/.test(t.source) ? ' · 📩' : ''}</div></div></div>
+      <div style="text-align:right;flex:none"><b class="${inn ? 'pos' : tr ? '' : 'neg'}">${inn ? '+' : tr ? '' : '−'}${inr(t.amount)}</b><br>
+      <button class="ghost" onclick="editTx('${jsq(t.id)}')">✏️</button></div></div>`;
+  }
+  function dueRow(d) {
+    const when = d.days < 0 ? `<span class="neg">⚠️ ${-d.days}d overdue</span>` : d.days === 0 ? '<span class="neg">🔴 AAJ</span>' :
+      d.days <= 3 ? `<span class="warn">🟠 ${d.days}d mein</span>` : `🟢 ${d.days}d mein`;
+    return `<div class="row"><div><div><b>${esc(d.name)}</b> <span class="chip">${esc(d.kind.replace('_', ' '))}</span></div>
+      <div class="sub">${fdate(d.date)} · ${when}${d.left && d.left !== '' ? ' · ' + esc(d.left) + ' kist baaki' : ''}</div></div>
+      <div style="text-align:right">${inr(d.amount)}<br><button class="ghost" onclick="payDue('${jsq(d.name)}')">✅ Paid</button></div></div>`;
+  }
+  function budgetRow(b) {
+    const cls = b.pct >= 1 ? 'red' : b.pct >= .8 ? 'amber' : '';
+    return `<div style="margin:10px 0"><div class="row" style="border:0;padding:0"><span>${emo(b.category)} <b>${esc(b.category)}</b></span><span>${inrS(b.spent)} / ${inrS(b.limit)}</span></div>
+      <div class="bar ${cls}"><i style="width:${Math.min(100, b.pct * 100)}%"></i></div>
+      <div class="sub">${esc(b.mood)}${b.left > 0 ? ' · roz ' + inr(Math.round(b.perDay)) + ' chal sakta' : ''}</div></div>`;
+  }
+
+  /* ── JAADU (scanner) ── */
+  let IMPLOG = [], IMPACC = '';
+  function vJaadu() {
+    const ai = D.ai === 'gemini' ? '✅ Engine: Gemini (free) — screenshots + statements' : D.ai === 'claude' ? '✅ Engine: Claude — screenshots + statements' :
+      '⚠️ Engine: basic OCR — sirf payment screenshots. Statements ke liye free Gemini key add karo (SETUP.md)';
+    return `<div class="card hero" style="margin-top:12px"><div class="l">🪄 Jaadu Scanner</div><div class="nw" style="font-size:24px">Photo daalo, hisaab lo</div>
+      <div class="row2">Payment screenshot → 1 entry · Statement → saari entries, duplicates skip, card bill reminder auto</div></div>
+    <div class="grid">
+      <div class="card"><h2>📤 Upload</h2>
+        <label class="drop" id="drop" for="files"><b>📸</b>Tap karke choose karo<br><span class="sub">Screenshots · PDF · CSV · Excel — ek saath kai files</span></label>
+        <input id="files" type="file" multiple accept="image/png,image/jpeg,image/webp,image/heic,.jpg,.jpeg,.png,.pdf,.csv,.xls,.xlsx,.txt" style="display:none" onchange="pickFiles(this.files);this.value=''">
+        <select id="impAcc" style="margin-top:10px" onchange="IMPACC=this.value"><option value="">🤖 Account: khud pehchano</option>${D.accounts.map(a => `<option ${a.name === IMPACC ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select>
+        <div class="hint">${ai}</div>
+        <div style="margin-top:10px">${IMPLOG.map(impRow).join('')}</div></div>
+      <div class="card"><h2>📜 Import history</h2>${(D.imports || []).map(b => `<div class="row"><div><b>${esc(b.account)}</b> · ${b.count} entries
+        <div class="sub">${fdate(b.from)} – ${fdate(b.to)}</div></div><button class="ghost" onclick="if(confirm('Ye poora import hata dein?'))call('undoImport',{batch:'${jsq(b.batch)}'})">↩️ Undo</button></div>`).join('')
+        || empty('📂', 'Abhi koi statement import nahi kiya')}</div>
+      <div class="card"><h2>💡 Pro tips</h2>
+        <div class="row" style="justify-content:flex-start">🔒 Password wala PDF? Khol ke <b>Print → Save as PDF</b> karo, password hat jayega</div>
+        <div class="row" style="justify-content:flex-start">📥 Netbanking se <b>CSV / Excel</b> statement sabse accurate hai</div>
+        <div class="row" style="justify-content:flex-start">♻️ Same entry SMS se aa chuki hai? Tension nahi — duplicate khud skip</div>
+        <div class="row" style="justify-content:flex-start">🤖 Telegram pe bhi chalega — bot ko photo/file bhejo, caption mein account naam</div></div>
+    </div>`;
+  }
+  function impRow(r) {
+    return `<div class="imp"><div class="st">${r.status === 'busy' ? '<span class="spin">🪄</span>' : r.status === 'ok' ? '✅' : '😵'}</div><div style="flex:1;min-width:0">
+      <div class="ellip"><b>${esc(r.name)}</b></div><pre>${esc(r.msg)}</pre>
+      ${r.fix ? `<button class="ghost" onclick="call('fixBalance',{batch:'${jsq(r.fix)}'},()=>{IMPLOG.find(x=>x.fix==='${jsq(r.fix)}').fix=null;render()})">🔧 Balance statement jaisa karo</button>` : ''}</div></div>`;
+  }
+  function readB64(file) {
+    return new Promise((ok, bad) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(',')[1] || ''); fr.onerror = () => bad(fr.error); fr.readAsDataURL(file); });
+  }
+  function apiP(action, data) { return apiCall(action, data); }
+  async function pickFiles(files) {
+    files = [...(files || [])];
+    if (!files.length) return;
+    const rows = files.map(f => ({ name: f.name, status: 'busy', msg: 'Jaadu chal raha hai… ' + pick(D.lines.scanWait) }));
+    IMPLOG = rows.concat(IMPLOG).slice(0, 30); render();
+    showVibe(pick(D.lines.sections.jaadu), '🪄', 'Jaadu Scanner');
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i], row = rows[i];
+      try {
+        if (f.size > 15e6) throw new Error('File 15MB se badi hai 🐘');
+        const b64 = await readB64(f);
+        const res = await apiP('import', { name: f.name, mime: f.type, b64, account: IMPACC });
+        D = res.data; row.status = 'ok'; row.msg = res.detail || res.msg; row.fix = res.fix;
+        rain(['✨', '🪄', '💸', '📄'], 16);
+      } catch (e) { row.status = 'err'; row.msg = String(e.message || e).replace(/^Error:\s*/, ''); }
+      render();
+    }
+    const ok = rows.filter(r => r.status === 'ok').length;
+    showVibe(ok === rows.length ? pick(D.lines.scanDone) : ok + '/' + rows.length + ' ho gaye — baaki ka error dekh lo 👀', ok ? '🪄' : '😵', 'Jaadu');
+  }
+  document.addEventListener('dragover', e => { if (TAB === 'jaadu') { e.preventDefault(); const d = document.getElementById('drop'); d && d.classList.add('over'); } });
+  document.addEventListener('dragleave', () => { const d = document.getElementById('drop'); d && d.classList.remove('over'); });
+  document.addEventListener('drop', e => { if (TAB === 'jaadu') { e.preventDefault(); pickFiles(e.dataTransfer.files); } });
+
+  /* ── KHARCHA ── */
+  function vKharcha() {
+    const accs = D.accounts.map(a => a.name), months = [...new Set(D.recent.map(t => t.date.slice(0, 7)))];
+    const list = filtered();
+    const out = list.filter(t => t.type === 'expense' && !['Card Payment', 'Self Transfer'].includes(t.category)).reduce((s, t) => s + t.amount, 0);
+    const inn = list.filter(t => t.type === 'income' && t.category !== 'Card Payment').reduce((s, t) => s + t.amount, 0);
+    let groups = '', last = '';
+    list.slice(0, 300).forEach(t => {
+      const d = fdate(t.date, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+      if (d !== last) { groups += `<div class="day">${d}</div>`; last = d; }
+      groups += txRow(t);
+    });
+    return `<div class="card" style="margin-top:12px"><h2>🔍 CID Investigation</h2>
+      <input id="fq" placeholder="Search: swiggy, rahul, hdfc…" value="${esc(FILTER.q)}">
+      <div class="filters">
+        <select id="ftype"><option value="">Sab types</option>${['expense', 'income', 'transfer', 'gave', 'took'].map(x => `<option ${FILTER.type === x ? 'selected' : ''}>${x}</option>`).join('')}</select>
+        <select id="fcat"><option value="">Sab categories</option>${[...new Set(D.recent.map(t => t.category))].sort().map(x => `<option ${FILTER.cat === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>
+        <select id="facc"><option value="">Sab accounts</option>${accs.map(x => `<option ${FILTER.acc === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>
+        <select id="fmonth"><option value="">Sab mahine</option>${months.map(x => `<option value="${x}" ${FILTER.month === x ? 'selected' : ''}>${fdate(x + '-01', { month: 'short', year: 'numeric' })}</option>`).join('')}</select>
+      </div>
+      <div class="sub">${list.length} entries · <span class="neg">Gaya ${inr(out)}</span> · <span class="pos">Aaya ${inr(inn)}</span></div></div>
+    <div class="grid" style="grid-template-columns:1fr">
+      <div class="card"><details><summary>➕ Detail mein add karo (date, category, sab kuch)</summary>${txForm({})}</details></div>
+      <div class="card">${groups || empty('🫥', '"Dhoondte reh jaoge" — kuch nahi mila')}${list.length > 300 ? '<div class="sub">Sirf pehle 300 dikha rahe. Filter laga ya Sheet khol.</div>' : ''}
+      <div style="margin-top:10px"><a class="ghost" href="${esc(D.sheetUrl)}" target="_blank" style="text-decoration:none">📦 Google Sheet / CSV export</a></div></div>
+    </div>`;
+  }
+  function filtered() {
+    const q = FILTER.q.toLowerCase();
+    return D.recent.filter(t => (!q || [t.note, t.category, t.account, t.to, String(t.amount)].join(' ').toLowerCase().includes(q)) &&
+      (!FILTER.type || t.type === FILTER.type) && (!FILTER.cat || t.category === FILTER.cat) &&
+      (!FILTER.acc || t.account === FILTER.acc || t.to === FILTER.acc) && (!FILTER.month || t.date.slice(0, 7) === FILTER.month));
+  }
+  function bindFilters() {
+    const q = document.getElementById('fq');
+    let tm;
+    q.oninput = () => { clearTimeout(tm); tm = setTimeout(() => { FILTER.q = q.value; render(); const n = document.getElementById('fq'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); };
+    [['ftype', 'type'], ['fcat', 'cat'], ['facc', 'acc'], ['fmonth', 'month']].forEach(([id, k]) => {
+      document.getElementById(id).onchange = e => { FILTER[k] = e.target.value; render(); };
+    });
+  }
+  function txForm(t) {
+    const accOpts = sel => D.accounts.map(a => `<option ${a.name === sel ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
+    const d = t.date ? t.date.slice(0, 10) : '';
+    return `<form class="f" onsubmit="saveTx(event,'${t.id ? jsq(t.id) : ''}')">
+      <select name="type" onchange="this.form.to.style.display=['transfer','gave','took'].includes(this.value)?'':'none'">
+        ${[['expense', '🔻 Kharcha'], ['income', '🟢 Income'], ['transfer', '🔁 Transfer / bill pay'], ['gave', '🫴 Diya (udhaar)'], ['took', '🤲 Liya (udhaar)']].map(o => `<option value="${o[0]}" ${t.type === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>
+      <input name="amount" type="number" step="0.01" min="0.01" placeholder="₹ Kitna?" required value="${t.amount || ''}">
+      <select name="account">${accOpts(t.account || D.defaultAccount)}</select>
+      <input name="to" list="accList" placeholder="Kisko / kis account mein" value="${esc(t.to || '')}" style="${['transfer', 'gave', 'took'].includes(t.type) ? '' : 'display:none'}">
+      <datalist id="accList">${D.accounts.map(a => `<option value="${esc(a.name)}">`).join('')}${D.people.map(p => `<option value="${esc(p.name)}">`).join('')}</datalist>
+      <select name="category"><option value="">Category (auto 🤖)</option>${D.categories.map(c => `<option ${t.category === c ? 'selected' : ''}>${c}</option>`).join('')}</select>
+      <input name="date" type="date" value="${d}">
+      <input name="note" class="full" placeholder="Note: kahan, kyun, kis liye" value="${esc(t.note || '')}">
+      <select name="vibe" class="full"><option value="">Vibe: neutral 😐</option><option value="worth" ${t.vibe === 'worth' ? 'selected' : ''}>😎 Worth it</option><option value="regret" ${t.vibe === 'regret' ? 'selected' : ''}>😬 Regret</option></select>
+      <button class="btn full">${t.id ? '💾 Save changes' : '➕ Add karo'}</button>
+      ${t.id ? `<button type="button" class="ghost full" style="color:var(--red);padding:9px" onclick="delTx('${jsq(t.id)}')">🗑️ Delete</button>` : ''}
+    </form>`;
+  }
+
+  /* ── TIJORI ── */
+  function vTijori() {
+    const A = D.accounts.filter(a => !a.liability), L = D.accounts.filter(a => a.liability);
+    const accRow = a => {
+      const p = a.limit ? Math.min(100, Math.max(0, a.value / a.limit * 100)) : 0;
+      return `<div class="row"><div class="flex"><div class="acc-ic">${KIND_ICON[a.kind] || '🏦'}</div><div>
+        <div><b>${esc(a.name)}</b> ${a.name === D.defaultAccount ? '<span class="tag">⭐ default</span>' : ''}</div>
+        <div class="sub">${esc(a.kind.replace('_', ' '))}${a.last4 ? ' · ..' + esc(a.last4) : ''}${a.limit ? ' · free ' + inr(a.available) + ' of ' + inrS(a.limit) : ''}</div>
+        ${a.limit ? `<div class="bar ${p > 80 ? 'red' : p > 50 ? 'amber' : ''}" style="width:160px"><i style="width:${p}%"></i></div>` : ''}</div></div>
+        <div style="text-align:right"><b class="${a.liability && a.value > 0 ? 'neg' : ''}">${inr(a.value)}</b><br>
+        ${a.name !== D.defaultAccount ? `<button class="ghost" onclick="call('setDefault',{name:'${jsq(a.name)}'})">⭐</button>` : ''}</div></div>`;
+    };
+    return `<div class="stats">${stat('Tere paas', inr(D.assets), '🏦', 'pos')}${stat('Tujh pe udhaar', inr(D.liabilities), '💳', 'neg')}${stat('Net worth', inr(D.netWorth), '👑')}</div>
+    <div class="grid">
+      <div class="card"><h2>🏦 Bank · Cash · Wallet · Investments</h2>${A.map(accRow).join('') || empty('🫙', 'Koi account nahi')}</div>
+      <div class="card"><h2>💳 Cards · Pay Later · Loans</h2>${L.map(accRow).join('') || empty('🕊️', 'Koi udhaar nahi — Karz mukt king 👑')}</div>
+      <div class="card"><h2>➕ Naya account</h2><form class="f" onsubmit="submitForm(event,'addAccount')">
+        <input name="name" placeholder="Naam: HDFC, ICICI CC, Simpl…" required>
+        <select name="kind">${D.kinds.map(k => `<option value="${k}">${KIND_ICON[k]} ${k.replace('_', ' ')}</option>`).join('')}</select>
+        <input name="opening" type="number" step="0.01" placeholder="Abhi balance (card/loan: kitna owe)">
+        <input name="last4" inputmode="numeric" placeholder="Last 4 digits (SMS ke liye)">
+        <input name="limit" type="number" placeholder="Credit limit (cards/pay later)" class="full">
+        <button class="btn full">Tijori mein daalo 🗝️</button></form>
+        <div class="hint">Card, pay-later, loan: number = jitna abhi dena hai.</div></div>
+    </div>`;
+  }
+
+  /* ── BUDGET ── */
+  function vBudget() {
+    const total = D.budgets.find(b => b.category === 'Total');
+    return `${total ? `<div class="card hero" style="margin-top:12px"><div class="l">🧮 Total monthly budget</div><div class="nw">${inr(total.left)} <span style="font-size:15px;opacity:.85">bacha</span></div>
+      <div class="row2"><span>${inr(total.spent)} / ${inr(total.limit)} (${pct(total.pct)})</span><span>Roz ${inr(Math.round(total.perDay))} chal sakta</span></div>
+      <div class="bar" style="background:rgba(255,255,255,.25)"><i style="width:${Math.min(100, total.pct * 100)}%;background:#fff"></i></div></div>` : ''}
+    <div class="grid">
+      <div class="card"><h2>🎯 Category budgets</h2>${D.budgets.filter(b => b.category !== 'Total').map(b => budgetRow(b) +
+        `<button class="ghost" onclick="call('setBudget',{category:'${jsq(b.category)}',amount:0})">🗑️ hatao</button>`).join('') || empty('🚗💨', 'Bina budget ke zindagi, bina brakes ki gaadi')}</div>
+      <div class="card"><h2>➕ Lakshman Rekha kheecho</h2><form class="f" onsubmit="submitForm(event,'setBudget')">
+        <select name="category"><option value="Total">🧮 Total (sab milake)</option>${D.categories.filter(c => !['Salary', 'Income'].includes(c)).map(c => `<option>${c}</option>`).join('')}</select>
+        <input name="amount" type="number" min="1" placeholder="₹ per month" required>
+        <button class="btn full">Set budget 🎯</button></form>
+        <div class="hint">80% aur 100% cross hone pe bot alert karega. "Ab tera kya hoga Kaalia?" 😨</div></div>
+    </div>`;
+  }
+
+  /* ── SAPNE ── */
+  function vSapne() {
+    const g = D.goals;
+    return `<div class="grid">${g.map(x => `<div class="card"><div class="flex"><div class="ring" style="--p:${Math.min(100, x.pct * 100)}"><span>${esc(x.emoji)}</span></div>
+      <div style="flex:1"><h3>${esc(x.name)} ${x.done ? '✅' : ''}</h3><div class="sub">${inr(x.saved)} / ${inr(x.target)} · ${pct(x.pct)}</div>
+      ${x.deadline ? `<div class="sub">🎯 ${fdate(x.deadline, { day: '2-digit', month: 'short', year: 'numeric' })}${x.perMonth && !x.done ? ' · har mahine ' + inr(Math.round(x.perMonth)) : ''}</div>` : ''}</div></div>
+      ${x.done ? '<div style="margin-top:10px">🏆 Sapna pura! Apun hi bhagwan hai 😎</div>' : `<form class="quick" onsubmit="saveGoal(event,'${jsq(x.name)}',${x.saved},${x.target})"><input name="amount" type="number" min="1" placeholder="₹ gullak mein daalo"><button class="btn">🪙</button></form>`}
+      <button class="ghost" style="margin-top:8px" onclick="if(confirm('Sapna delete?'))call('deleteGoal',{name:'${jsq(x.name)}'})">🗑️</button></div>`).join('')}
+      <div class="card"><h2>🌟 Naya sapna</h2><form class="f" onsubmit="submitForm(event,'addGoal')">
+        <input name="name" placeholder="iPhone, Goa trip, Bike…" required class="full">
+        <input name="target" type="number" min="1" placeholder="₹ Target" required>
+        <input name="emoji" placeholder="Emoji 🏖️" maxlength="4">
+        <input name="deadline" type="date" class="full">
+        <button class="btn full">Sapna dekho ✨</button></form>
+        <div class="hint">Bot pe bhi: <b>save 500 goa</b>. Gullak virtual hai — paisa tere account mein hi rehta hai.</div></div>
+    </div>`;
+  }
+
+  /* ── KIST ── */
+  function vKist() {
+    const next30 = D.dues.filter(d => d.days <= 30).reduce((s, d) => s + d.amount, 0);
+    const accOpts = D.accounts.map(a => `<option>${esc(a.name)}</option>`).join('');
+    return `<div class="stats">${stat('Agle 30 din', inr(next30), '📅', 'neg')}${stat('Active dues', D.dues.length, '⏰')}${stat('Overdue', D.dues.filter(d => d.days < 0).length, '⚠️', D.dues.some(d => d.days < 0) ? 'neg' : '')}</div>
+    <div class="grid">
+      <div class="card"><h2>⏰ EMIs · Bills · Subscriptions</h2>${D.dues.map(d => dueRow(d) + `<button class="ghost" onclick="if(confirm('Delete ${jsq(d.name)}?'))call('deleteDue',{name:'${jsq(d.name)}'})">🗑️</button>`).join('') || empty('🙌', 'Koi due nahi. Azaadi!')}</div>
+      <div class="card"><h2>➕ Naya due</h2><form class="f" onsubmit="submitForm(event,'addDue')">
+        <input name="name" placeholder="Bike EMI, Jio, Netflix…" required class="full">
+        <select name="kind">${D.dueKinds.map(k => `<option value="${k}">${k.replace('_', ' ')}</option>`).join('')}</select>
+        <input name="dueDay" type="number" min="1" max="31" placeholder="Due date (1-31)" required>
+        <input name="amount" type="number" step="0.01" placeholder="₹ (card bill: khaali = outstanding)" class="full">
+        <select name="payFrom"><option value="">Kahan se pay?</option>${accOpts}</select>
+        <select name="payTo"><option value="">Loan/card account (optional)</option>${D.accounts.filter(a => a.liability).map(a => `<option>${esc(a.name)}</option>`).join('')}</select>
+        <input name="installments" type="number" placeholder="Kitni kist baaki (EMI)" class="full">
+        <button class="btn full">Reminder set ⏰</button></form>
+        <div class="hint">Bot 3 din pehle, 1 din pehle aur us din subah 9 baje yaad dilayega. "Main hoon na" 💪</div></div>
+    </div>`;
+  }
+
+  /* ── DOST ── */
+  function vDost() {
+    return `<div class="stats">${stat('Dost denge', inr(D.receivable), '🟢', 'pos')}${stat('Tu dega', inr(D.payable), '🔴', 'neg')}</div>
+    <div class="grid">
+      <div class="card"><h2>🤝 Hisaab</h2>${D.people.map(p => `<div class="row"><div class="flex"><div class="acc-ic">${p.value > 0 ? '🫵' : '🙇'}</div><div><b>${esc(p.name)}</b>
+        <div class="sub">${p.value > 0 ? 'tujhe dega — "Raju, paise de de" 😩' : 'ko tu dega — chal bhar de 🙏'}</div></div></div>
+        <div style="text-align:right"><b class="${p.value > 0 ? 'pos' : 'neg'}">${inr(Math.abs(p.value))}</b><br><button class="ghost" onclick="if(confirm('Settle ${jsq(p.name)}?'))call('settle',{name:'${jsq(p.name)}'})">🤝 Settle</button></div></div>`).join('')
+        || empty('🙌', 'Sabke saath barabar. "Yaari hai imaan mera"')}</div>
+      <div class="card"><h2>🍕 Bill split karo</h2><form class="f" onsubmit="splitSubmit(event)">
+        <input name="amount" type="number" min="1" placeholder="₹ Total bill" required>
+        <input name="note" placeholder="Kis cheez ka? (dinner)">
+        <input name="people" class="full" placeholder="Kiske saath? rahul, amit, priya" required>
+        <select name="account" class="full">${D.accounts.map(a => `<option ${a.name === D.defaultAccount ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select>
+        <button class="btn full">Barabar baanto ➗</button></form>
+        <div class="hint">Tera hissa kharcha mein, baaki dosto ke naam udhaar mein. "Hum saath saath hain" 👨‍👩‍👧‍👦</div>
+        <h2 style="margin-top:16px">💸 Udhaar diya / liya</h2><form class="f" onsubmit="udhaarSubmit(event)">
+        <select name="type"><option value="gave">🫴 Maine diya</option><option value="took">🤲 Maine liya</option></select>
+        <input name="amount" type="number" min="1" placeholder="₹" required>
+        <input name="to" list="pplList" class="full" placeholder="Dost ka naam" required><datalist id="pplList">${D.people.map(p => `<option value="${esc(p.name)}">`).join('')}</datalist>
+        <button class="btn full">Likh lo ✍️</button></form></div>
+    </div>`;
+  }
+
+  /* ── WRAPPED ── */
+  function vWrapped() {
+    const w = D.wrapped[WMONTH];
+    const head = `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px;flex-wrap:wrap">
+      <h3>🎬 Paisa Wrapped · ${esc(w.label)}</h3>
+      <div class="seg"><button class="${WMONTH === 0 ? 'on' : ''}" onclick="WMONTH=0;render()">Is mahine</button><button class="${WMONTH === 1 ? 'on' : ''}" onclick="WMONTH=1;render()">Pichla</button></div></div>`;
+    if (!w.count) return head + `<div class="card" style="margin-top:12px">${empty('🍿', 'Is mahine ki picture abhi release nahi hui. Kharche log kar!')}</div>`;
+    const s = (cls, lab, big, sub) => `<div class="card story ${cls}"><div class="lab">${lab}</div><div><div class="big">${big}</div><div style="opacity:.9;margin-top:4px">${sub || ''}</div></div></div>`;
+    return head + `<div class="grid">
+      ${s('g1', '🎭 Tu hai', esc(w.persona.title), esc(w.persona.line))}
+      ${s('g2', '🔻 Total kharcha', inr(w.expense), w.count + ' transactions · roz ~' + inr(Math.round(w.avgDay)))}
+      ${w.savingsRate !== null ? s('g4', '💰 Savings rate', pct(w.savingsRate), esc(w.title)) : s('g4', '🟢 Income', inr(w.income), 'Income log karo, savings rate dikhega')}
+      ${w.top ? s('g3', '👑 Top category', emo(w.top.name) + ' ' + esc(w.top.name), pct(w.top.share) + ' of all kharcha · ' + inr(w.top.value)) : ''}
+      ${w.topMerchant ? s('g6', '💘 Sabse bada crush', esc(w.topMerchant.name), w.topMerchant.count + ' baar paisa diya. Rishta pakka? 💍') : ''}
+      ${w.biggest ? s('g5', '💣 Sabse bada kharcha', inr(w.biggest.amount), esc(w.biggest.note) + ' · ' + fdate(w.biggest.date)) : ''}
+      ${w.busiest ? s('g1', '🔥 Sabse mehenga din', fdate(w.busiest.date, { weekday: 'short', day: '2-digit', month: 'short' }), inr(w.busiest.value) + ' ek din mein. Kya hua tha us din? 👀') : ''}
+      ${s('g2', '🗿 No-spend days', w.noSpendDays + ' din', w.noSpendDays >= 5 ? 'Monk mode respect 🙏' : 'Agli baar zyada, promise? 🤞')}
+      ${w.vsLast !== null ? s(w.vsLast > 0 ? 'g3' : 'g4', w.vsLast > 0 ? '📈 Pichle mahine se' : '📉 Pichle mahine se', (w.vsLast > 0 ? '+' : '−') + pct(Math.abs(w.vsLast)), w.vsLast > 0 ? 'zyada kharcha — "Inflation tu khud hai"' : 'kam kharcha — Sharmaji ka beta shocked 😳') : ''}
+      ${(w.regret || w.worth) ? s('g6', '😬 Regret vs 😎 Worth', w.regret + ' : ' + w.worth, w.regret > w.worth ? 'Dil ne dimaag ko haraya 💔' : 'Paisa vasool life 🔥') : ''}
+    </div>
+    <div class="card" style="margin-top:12px"><h2>🔥 Roast session 🎤</h2>${D.roast.map(r => `<div class="row" style="justify-content:flex-start">🎤 ${esc(r)}</div>`).join('')}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" onclick="shareStory()">📸 Insta story banao</button>
+      <button class="ghost" style="padding:9px 12px" onclick="shareWrapped()">📋 Copy text</button></div></div>`;
+  }
+  function storyStickers(w) {
+    if (w.savingsRate !== null && w.savingsRate >= 0.3) return [['🗿', 'SIGMA SAVER'], ['💅', 'RICH AUNTIE ERA']];
+    if (w.savingsRate !== null && w.savingsRate < 0) return [['💀', 'BRO IS COOKED'], ['📉', "IT'S SO OVER"]];
+    if (w.regret > w.worth) return [['🚩', 'RED FLAG ERA'], ['🤡', 'CLOWN MOMENT']];
+    return [['✨', 'MAIN CHARACTER'], ['🤌', 'JUST LOOKING LIKE A WOW']];
+  }
+  async function makeStory() {
+    const w = D.wrapped[WMONTH], a = D.aura;
+    const c = document.createElement('canvas'); c.width = 1080; c.height = 1920;
+    const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 1080, 1920);
+    g.addColorStop(0, '#7c3aed'); g.addColorStop(.55, '#ec4899'); g.addColorStop(1, '#f59e0b');
+    x.fillStyle = g; x.fillRect(0, 0, 1080, 1920);
+    x.globalAlpha = .13; x.fillStyle = '#fff';
+    [[930, 220, 270], [110, 1480, 330], [1000, 1700, 190]].forEach(([cx, cy, r]) => { x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill(); });
+    x.globalAlpha = 1;
+    try { await Promise.all([document.fonts.load('90px Anton'), document.fonts.load('700 40px "Space Grotesk"')]); } catch (e) {}
+    const fit = (txt, max, size, font) => { let s = size; do { x.font = font.replace('$', s); s -= 4; } while (x.measureText(txt).width > max && s > 20); };
+    const rr = (X, Y, W, H, R) => { x.beginPath(); x.moveTo(X + R, Y); x.arcTo(X + W, Y, X + W, Y + H, R); x.arcTo(X + W, Y + H, X, Y + H, R); x.arcTo(X, Y + H, X, Y, R); x.arcTo(X, Y, X + W, Y, R); x.closePath(); };
+    x.textAlign = 'center'; x.fillStyle = '#fff';
+    x.font = '700 42px "Space Grotesk", sans-serif'; x.fillText('💸 KAHA GAYA MERA PAISA', 540, 140);
+    fit('PAISA WRAPPED', 960, 128, '$px Anton, Impact, sans-serif'); x.fillText('PAISA WRAPPED', 540, 290);
+    x.font = '600 46px "Space Grotesk", sans-serif'; x.fillText(w.label.toUpperCase(), 540, 360);
+    x.fillStyle = 'rgba(255,255,255,.18)'; rr(70, 420, 940, 290, 44); x.fill();
+    x.fillStyle = '#fff'; x.font = '600 40px "Space Grotesk", sans-serif'; x.fillText('Main hoon…', 540, 495);
+    fit(w.persona.title, 880, 92, '$px Anton, Impact, sans-serif'); x.fillText(w.persona.title, 540, 610);
+    fit(w.persona.line, 860, 36, '500 $px "Space Grotesk", sans-serif'); x.fillText(w.persona.line, 540, 670);
+    const rows = [['🔻 Kharcha', inrS(w.expense)], ['👑 Top', w.top ? w.top.name + ' · ' + pct(w.top.share) : '—'],
+      ['💘 Crush', w.topMerchant ? w.topMerchant.name + ' ×' + w.topMerchant.count : '—'], ['💰 Saved', w.savingsRate !== null ? pct(w.savingsRate) : '—'],
+      ['🗿 No-spend days', String(w.noSpendDays)], [a.emoji + ' Aura', a.score.toLocaleString('en-IN') + ' · ' + a.tier]];
+    rows.forEach((r, i) => {
+      const y = 790 + i * 118;
+      x.fillStyle = 'rgba(0,0,0,.16)'; rr(90, y - 70, 900, 98, 30); x.fill();
+      x.fillStyle = '#fff'; x.textAlign = 'left'; x.font = '600 40px "Space Grotesk", sans-serif'; x.fillText(r[0], 130, y);
+      x.textAlign = 'right'; fit(r[1], 520, 48, '$px Anton, Impact, sans-serif'); x.fillText(r[1], 950, y);
+    });
+    x.textAlign = 'center';
+    const sticker = (e, t, cx, cy, rot) => {
+      x.save(); x.translate(cx, cy); x.rotate(rot * Math.PI / 180);
+      x.font = '150px sans-serif'; x.shadowColor = 'rgba(0,0,0,.3)'; x.shadowBlur = 20; x.fillText(e, 0, -10); x.shadowBlur = 0;
+      x.font = '56px Anton, Impact, sans-serif'; const tw = x.measureText(t).width + 50;
+      x.fillStyle = '#111'; rr(-tw / 2, 20, tw, 84, 20); x.fill(); x.strokeStyle = '#fff'; x.lineWidth = 6; x.stroke();
+      x.fillStyle = '#fff'; x.fillText(t, 0, 84); x.restore();
+    };
+    const st = storyStickers(w);
+    sticker(st[0][0], st[0][1], 300, 1590, -9);
+    sticker(st[1][0], st[1][1], 780, 1660, 8);
+    x.fillStyle = 'rgba(255,255,255,.9)'; x.font = '600 34px "Space Grotesk", sans-serif'; x.fillText('Apna bana → Kaha Gaya Mera Paisa 💸', 540, 1860);
+    return c;
+  }
+  async function shareStory() {
+    showVibe('Story ban rahi hai… "Lights, camera, kharcha" 🎬', '📸', 'Insta story');
+    const c = await makeStory();
+    c.toBlob(async blob => {
+      const file = new File([blob], 'paisa-wrapped.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: 'Paisa Wrapped', text: 'Mera Paisa Wrapped 💸 #KahaGayaMeraPaisa' }); showSticker({ e: '📸', t: 'Posted. Slay!' }); return; }
+        catch (e) { if (e.name === 'AbortError') return; }
+      }
+      const url = URL.createObjectURL(blob);
+      openModal(`<h3>📸 Story ready!</h3><div class="sub" style="margin-bottom:8px">Long-press → Save image → Insta story pe daal 🔥</div>
+        <img src="${url}" alt="Paisa Wrapped story" style="width:100%;border-radius:18px;display:block">
+        <a class="btn" href="${url}" download="paisa-wrapped.png" style="display:block;text-align:center;margin-top:10px;text-decoration:none">⬇️ Download</a>`);
+    }, 'image/png');
+  }
+  function shareWrapped() {
+    const w = D.wrapped[WMONTH];
+    const txt = `🎬 My Paisa Wrapped (${w.label})\n🎭 ${w.persona.title}\n🔻 Kharcha: ${inr(w.expense)}\n${w.top ? '👑 Top: ' + w.top.name + ' (' + pct(w.top.share) + ')\n' : ''}${w.topMerchant ? '💘 Crush: ' + w.topMerchant.name + ' x' + w.topMerchant.count + '\n' : ''}${w.savingsRate !== null ? '💰 Saved: ' + pct(w.savingsRate) + '\n' : ''}🗿 No-spend days: ${w.noSpendDays}\n\n— Kaha Gaya Mera Paisa 💸`;
+    const done = () => showVibe('Copied! Ab story pe daal aur flex kar 😎', '📋', 'Share');
+    try { navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt, done)); } catch (e) { fallbackCopy(txt, done); }
+  }
+  function fallbackCopy(txt, done) {
+    const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); done(); } catch (e) { prompt('Copy this:', txt); }
+    t.remove();
+  }
+
+  /* ── BADGES ── */
+  function vBadges() {
+    const got = D.badges.filter(b => b.got).length;
+    return `<div class="card hero" style="margin-top:12px">${stk(D.aura.emoji, D.aura.score.toLocaleString('en-IN') + ' aura', 8, 'right:12px;top:12px', 'dark')}<div class="l">🏆 Hall of Fame</div><div class="nw">${got} / ${D.badges.length}</div>
+      <div class="bar" style="background:rgba(255,255,255,.25)"><i style="width:${got / D.badges.length * 100}%;background:#fff"></i></div>
+      <div class="row2">${got === D.badges.length ? '"Apun hi bhagwan hai" 😎 Sab unlock!' : got >= 5 ? 'Thalaiva energy 🕶️ Keep going' : 'Abhi toh party shuru hui hai 🎉'}</div></div>
+    <div class="badges" style="margin-top:12px">${D.badges.map(b => `<div class="badge ${b.got ? '' : 'lock'}"><b>${b.got ? b.emoji : '🔒'}</b><div class="n">${esc(b.name)}</div><div class="d">${esc(b.desc)}</div></div>`).join('')}</div>
+    <div class="card" style="margin-top:12px"><h2>⚡ Streak stats</h2>
+      <div class="row"><span>🔥 Logging streak</span><b>${D.streaks.log} din (best ${D.streaks.bestLog})</b></div>
+      <div class="row"><span>🗿 No-spend streak</span><b>${D.streaks.noSpend} din (best ${D.streaks.bestNoSpend})</b></div>
+      <div class="row"><span>🧘 Is mahine no-spend days</span><b>${D.streaks.monthNoSpend}</b></div>
+      <div class="row"><span>📆 Tracking since</span><b>${D.streaks.days} din</b></div></div>`;
+  }
+
+  /* ── actions ── */
+  function quick() {
+    const q = document.getElementById('q'), t = q.value.trim();
+    if (!t) { q.focus(); return; }
+    buzz(); q.value = '';
+    const fx = () => {
+      const isIn = /^\s*(\+|income|got|received|salary|took|borrowed)/i.test(t);
+      rain(isIn ? ['🤑', '💰', '💵', '🪙'] : /^\s*(save|gullak)/i.test(t) ? ['🪙', '✨', '🌟'] : ['💸', '💸', '🥲', '💵'], 22);
+    };
+    const offline = () => { setQueue(queue().concat([t])); showVibe('Net nahi hai 📴 Entry save kar li — online aate hi sync. Chill guy mode 😌', '📴', 'Offline'); showSticker({ e: '📴', t: 'Saved offline' }); };
+    if (!IS_GAS && !navigator.onLine) { offline(); return; }
+    apiCall('quick', { text: t }).then(res => applyRes(res, fx))
+      .catch(e => { if (!IS_GAS && e instanceof TypeError) offline(); else showVibe(errText(e), '🤌', 'Arre bhai bhai bhai'); });
+  }
+  function formData(f) { return Object.fromEntries(new FormData(f).entries()); }
+  function submitForm(e, action) { e.preventDefault(); buzz(); const f = e.target; call(action, formData(f), () => f.reset && f.reset()); }
+  function saveTx(e, id) {
+    e.preventDefault(); buzz();
+    const d = formData(e.target);
+    if (id) { d.id = id; call('updateTx', d, closeModal); }
+    else call('addTx', d, () => { e.target.reset(); rain(d.type === 'income' ? ['🤑', '💰'] : ['💸', '🥲'], 18); });
+  }
+  function editTx(id) {
+    const t = D.recent.find(x => x.id === id);
+    if (!t) return;
+    openModal(`<h3>✏️ Edit kharcha</h3><div class="sub" style="margin-bottom:10px">"History likhne wale history badal bhi sakte hain" 🖊️</div>${txForm(t)}`);
+  }
+  function delTx(id) { if (confirm('Pakka delete? "Mitti pao"?')) call('deleteTx', { id }, closeModal); }
+  function payDue(name) { if (confirm('"' + name + '" paid mark karein aur log karein?')) call('payDue', { name }, () => rain(['✅', '🎉', '😌'], 18)); }
+  function saveGoal(e, name, saved, target) {
+    e.preventDefault(); buzz();
+    const amt = Number(new FormData(e.target).get('amount'));
+    if (!amt) return;
+    call('saveGoal', { name, amount: amt }, () => {
+      if (saved < target && saved + amt >= target) rain(['🎉', '🏆', '✨', '🎊', '🥳'], 60); else rain(['🪙', '✨'], 14);
+    });
+  }
+  function splitSubmit(e) {
+    e.preventDefault(); buzz();
+    const d = formData(e.target);
+    const ppl = d.people.split(/[,&]+/).map(s => s.trim()).filter(Boolean).join(', ');
+    call('quick', { text: `split ${d.amount} ${d.note || ''} ${d.account} with ${ppl}` }, () => { e.target.reset(); rain(['🍕', '➗', '🤝'], 18); });
+  }
+  function udhaarSubmit(e) {
+    e.preventDefault(); buzz();
+    const d = formData(e.target);
+    call('addTx', { type: d.type, amount: d.amount, to: d.to, account: D.defaultAccount }, () => e.target.reset());
+  }
+  function openModal(html) { document.getElementById('modalBox').innerHTML = html; document.getElementById('modal').classList.add('show'); }
+  function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+  /* ── boot ── */
+  applyTheme();
+  document.getElementById('vibeBtn').style.opacity = VIBE ? 1 : .4;
+  document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') quick(); });
+  let ex = 0;
+  setInterval(() => { const q = document.getElementById('q'); if (document.activeElement !== q) q.placeholder = EXAMPLES[ex++ % EXAMPLES.length]; }, 2800);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  const params = new URLSearchParams(location.search);
+  const wantTab = params.get('tab') || store.get('tab', 'home');
+  TAB = TABS.some(t => t[0] === wantTab) ? wantTab : 'home';
+  renderNav(); renderQueuePill();
+
+  function connectView(err) {
+    document.getElementById('app').innerHTML = `<div class="card hero" style="margin-top:12px">${stk('🔗', 'Step 1', -6, 'right:14px;top:14px', 'dark')}
+      <div class="l">Welcome, main character ✨</div><div class="nw" style="font-size:26px">App ko apne hisaab se connect karo</div>
+      <div class="row2">Ek baar ka kaam. Phir hamesha ke liye ✅</div></div>
+      <div class="card" style="margin-top:12px"><h2>🔗 Connect</h2>
+        <div style="margin-bottom:8px">Telegram bot pe <b>/dash</b> bhej → <b>"Install / open the app"</b> dabao — auto connect ho jayega.<br><span class="sub">Ya secret link yahan paste karo (bot ke /dash message mein hai):</span></div>
+        <input id="link" placeholder="script.google.com/macros/s/…/exec?k=…" autocomplete="off">
+        <button class="btn" style="margin-top:8px;width:100%" onclick="connect(document.getElementById('link').value)">Connect karo 🚀</button>
+        ${err ? `<div class="hint neg">⚠️ ${esc(err)}</div>` : ''}</div>`;
+  }
+  function connect(link) {
+    link = String(link || '').trim();
+    if (!/^https:\/\/script\.google(usercontent)?\.com\/.+[?&]k=/.test(link)) { connectView('Ye link sahi nahi lag raha. /dash wala "script.google.com…?k=…" link chahiye.'); return; }
+    store.set('api', link);
+    document.getElementById('app').innerHTML = '<div class="loader"><b>🔗</b>Connect ho raha hai…</div>';
+    boot(true);
+  }
+  async function receiveShared() {
+    if (!params.get('share') || !('caches' in window)) return;
+    history.replaceState(null, '', location.pathname);
+    const c = await caches.open('kgmp-share');
+    const keys = await c.keys();
+    const files = [];
+    for (const k of keys) {
+      const r = await c.match(k);
+      const kind = r.headers.get('x-kind');
+      if (kind === 'text') { const txt = await r.text(); if (txt.trim()) { document.getElementById('q').value = txt.trim().slice(0, 500); showVibe('Shared text aaya 📩 Add dabao ya edit karo', '📩', 'Share'); } }
+      else { const b = await r.blob(); files.push(new File([b], decodeURIComponent(r.headers.get('x-name') || 'shared'), { type: b.type })); }
+      await c.delete(k);
+    }
+    if (files.length) { go('jaadu'); pickFiles(files); }
+  }
+  function boot(fresh) {
+    apiCall('dashboard').then(res => {
+      window.__fromCache = false;
+      D = res.data; saveCache(); render();
+      if (fresh) { showSticker({ e: '🔗', t: 'Connected. Slay!' }); rain(['✨', '💸', '🎉'], 30); }
+      else if (VIBE) { setTimeout(() => showVibe(pick(D.lines.sections[TAB]), null, TAB_TITLES[TAB]), 300); if (Math.random() < .35) setTimeout(() => sticker('welcome'), 900); }
+      flushQueue(); receiveShared();
+    }).catch(e => {
+      if (!IS_GAS && !store.get('api', '')) { connectView(); return; }
+      if (!IS_GAS && fresh) { store.set('api', ''); connectView(errText(e)); return; }
+      if (D) { showVibe('Offline ho shayad 📴 Purana data dikha rahe hain', '📴', 'Offline'); return; }
+      document.getElementById('app').innerHTML = '<div class="loader"><b>😵</b>' + esc(errText(e)) + '</div>';
+    });
+  }
+  if (!IS_GAS) window.addEventListener('hashchange', () => {
+    const h = location.hash.match(/^#connect=(.+)$/);
+    if (h) { history.replaceState(null, '', location.pathname + location.search); connect(decodeURIComponent(h[1])); }
+  });
+  if (!IS_GAS) {
+    const h = location.hash.match(/^#connect=(.+)$/);
+    if (h) { history.replaceState(null, '', location.pathname + location.search); connect(decodeURIComponent(h[1])); }
+    else if (!store.get('api', '')) connectView();
+    else {
+      try { const c = localStorage.getItem('kgmp_last'); if (c) { D = JSON.parse(c); window.__fromCache = true; render(); } } catch (e) {}
+      boot(false);
+    }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+    if (!IS_STANDALONE) setTimeout(() => { if (!deferredInstall) document.getElementById('installBtn').style.display = ''; }, 2500);
+  } else boot(false);
+</script>
+</body>
+</html>
