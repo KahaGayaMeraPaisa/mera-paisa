@@ -187,6 +187,14 @@
   .ticker { overflow: hidden; white-space: nowrap; margin-top: 10px; border-radius: 12px; background: #111; color: #fff; font-size: 13px; padding: 7px 0; }
   .ticker span { display: inline-block; padding-left: 100%; animation: tick 38s linear infinite; }
   @keyframes tick { to { transform: translateX(-100%); } }
+  .chatlog { max-height: 52vh; min-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px 10px; }
+  .bub { max-width: 86%; padding: 9px 13px; border-radius: 18px; line-height: 1.45; font-size: 14.5px; overflow-wrap: anywhere; }
+  .bub.me { align-self: flex-end; background: var(--grad); color: #fff; border-bottom-right-radius: 5px; }
+  .bub.bot { align-self: flex-start; background: var(--card2); border-bottom-left-radius: 5px; }
+  .bub.typing { opacity: .75; animation: wob .6s ease infinite alternate; }
+  .chips { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0 4px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chips button { flex: none; white-space: nowrap; padding: 6px 10px; }
   .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--card2); color: var(--muted); margin-left: 6px; vertical-align: middle; }
 </style>
 </head>
@@ -232,10 +240,10 @@
   const SERVER_API = null; // the /exec URL — used instead of google.script.run, which breaks when several Google accounts are signed in
   const IS_GAS = !!SERVER_KEY; // true when served by Apps Script, false in the installed app
   const TABS = [
-    ['home', '🏠', 'Ghar'], ['jaadu', '🪄', 'Jaadu'], ['kharcha', '💸', 'Kharcha'], ['tijori', '🏦', 'Tijori'], ['budget', '🎯', 'Budget'],
+    ['home', '🏠', 'Ghar'], ['ai', '🤖', 'Munshi'], ['jaadu', '🪄', 'Jaadu'], ['kharcha', '💸', 'Kharcha'], ['tijori', '🏦', 'Tijori'], ['budget', '🎯', 'Budget'],
     ['sapne', '🌟', 'Sapne'], ['kist', '⏰', 'EMI/Bills'], ['dost', '🤝', 'Dost'], ['wrapped', '🎬', 'Wrapped'], ['badges', '🏆', 'Badges'],
   ];
-  const TAB_TITLES = { home: 'Ghar', jaadu: 'Jaadu Scanner', kharcha: 'Kharcha Khata', tijori: 'Tijori', budget: 'Budget Ki Lakshman Rekha', sapne: 'Sapno Ki Gullak',
+  const TAB_TITLES = { home: 'Ghar', ai: 'Munshi Ji', jaadu: 'Jaadu Scanner', kharcha: 'Kharcha Khata', tijori: 'Tijori', budget: 'Budget Ki Lakshman Rekha', sapne: 'Sapno Ki Gullak',
     kist: 'Kist & Bills', dost: 'Dost Ledger', wrapped: 'Paisa Wrapped', badges: 'Hall of Fame' };
   const PALETTE = ['#7c3aed', '#ec4899', '#f59e0b', '#10b981', '#0ea5e9', '#ef4444', '#8b5cf6', '#14b8a6', '#f97316', '#6366f1', '#84cc16', '#a855f7'];
   const KIND_ICON = { bank: '🏦', cash: '💵', wallet: '👛', investment: '📈', credit_card: '💳', paylater: '⏳', loan: '🏚️' };
@@ -403,9 +411,10 @@
     const h = new Date().getHours();
     const g = D.lines.greet[h < 12 ? 'morning' : h < 17 ? 'afternoon' : h < 21 ? 'evening' : 'night'];
     document.getElementById('greet').textContent = window.__greet || (window.__greet = pick(g));
-    const fn = { home: vHome, jaadu: vJaadu, kharcha: vKharcha, tijori: vTijori, budget: vBudget, sapne: vSapne, kist: vKist, dost: vDost, wrapped: vWrapped, badges: vBadges }[TAB];
+    const fn = { home: vHome, ai: vAI, jaadu: vJaadu, kharcha: vKharcha, tijori: vTijori, budget: vBudget, sapne: vSapne, kist: vKist, dost: vDost, wrapped: vWrapped, badges: vBadges }[TAB];
     document.getElementById('app').innerHTML = '<section class="on">' + fn() + '</section>';
     if (TAB === 'kharcha') bindFilters();
+    if (TAB === 'ai') scrollChat();
   }
 
   /* ── HOME ── */
@@ -527,6 +536,139 @@
       <div class="sub">${esc(b.mood)}${b.left > 0 ? ' · roz ' + inr(Math.round(b.perDay)) + ' chal sakta' : ''}</div></div>`;
   }
 
+  /* ── MUNSHI JI (AI chat) ── */
+  let AICHAT = (() => { try { return JSON.parse(localStorage.getItem('kgmp_aichat') || '[]'); } catch (e) { return []; } })();
+  let AIBUSY = false;
+  const AI_CHIPS = ['Is mahine kaha gaya paisa? 🕵️', 'Mujhe roast karo 🔥', 'Budget plan bana do 🎯', 'Kitna bacha sakta hoon? 💰', 'Sabse bada kharcha? 💣', 'EMI aur bills kab hain? ⏰', 'Pichle mahine se compare karo 📊'];
+  function saveChat() { try { localStorage.setItem('kgmp_aichat', JSON.stringify(AICHAT.slice(-40))); } catch (e) {} }
+  function mdLite(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>'); }
+  function scrollChat() { const l = document.getElementById('chatlog'); if (l) l.scrollTop = l.scrollHeight; }
+  function vAI() {
+    const msgs = AICHAT.length ? AICHAT : [{ role: 'model', text: 'Namaste boss! 🙏 Main **Munshi Ji** 🤖 — tera poora hisaab mere paas hai.\nPoocho jaise "is mahine Swiggy pe kitna gaya?" ya "budget plan bana do".\nKharcha likhna ho toh seedha type karo: 250 chai ✍️' }];
+    return `<div class="card hero" style="margin-top:12px">${stk('🤖', 'AI', -6, 'right:14px;top:14px', 'dark')}<div class="l">🤖 Munshi Ji</div><div class="nw" style="font-size:24px">Tera personal paisa guru</div>
+      <div class="row2">Tere asli data se jawab · Hinglish · No boring gyaan</div></div>
+    <div class="card" style="margin-top:12px"><div id="chatlog" class="chatlog">${msgs.map(m => `<div class="bub ${m.role === 'user' ? 'me' : 'bot'}">${m.role === 'user' ? esc(m.text) : mdLite(m.text)}</div>`).join('')}
+      ${AIBUSY ? '<div class="bub bot typing">Munshi Ji soch rahe hain… 🤔</div>' : ''}</div>
+      <div class="chips">${AI_CHIPS.map(c => `<button class="ghost" onclick="askAI('${jsq(c)}')">${esc(c)}</button>`).join('')}</div>
+      <form class="quick" style="margin-top:6px" onsubmit="event.preventDefault();askAI(this.q2.value);this.q2.value=''"><input name="q2" id="aiq" autocomplete="off" placeholder="Poocho kuch bhi… ya likho 250 chai"><button class="btn">➤</button></form>
+      <div class="hint">🔒 Jawab ke liye tera hisaab-summary Google Gemini (free) ko jaata hai, sirf us sawaal ke liye. ${AICHAT.length ? '<a href="#" onclick="AICHAT=[];saveChat();render();return false">🧹 Chat saaf karo</a>' : ''}</div></div>`;
+  }
+  async function askAI(text) {
+    text = String(text || '').trim();
+    if (!text || AIBUSY) return;
+    AICHAT.push({ role: 'user', text });
+    AIBUSY = true; saveChat(); render();
+    const isEntry = /^\s*([+-]?\d|(spent|paid|gave|took|transfer|split|save|salary|income|got|received)\b)/i.test(text);
+    try {
+      if (isEntry) {
+        const res = await apiCall('quick', { text });
+        applyRes(res);
+        AICHAT.push({ role: 'model', text: '✅ Likh liya!\n' + (res.msg || '') });
+      } else {
+        const res = await apiCall('chat', { text, history: AICHAT.slice(0, -1).slice(-8) });
+        AICHAT.push({ role: 'model', text: res.reply || '🤔' });
+      }
+    } catch (e) { AICHAT.push({ role: 'model', text: '😵 ' + errText(e) }); }
+    AIBUSY = false; saveChat();
+    if (TAB === 'ai') { render(); const q = document.getElementById('aiq'); if (q) q.focus(); }
+  }
+
+  /* ── STATEMENT IMPORT (PDF unlocked in the browser, password never leaves the device) ── */
+  let STMTLOG = [], PDFJS = null;
+  function stmtCard() {
+    return `<div class="card" style="position:relative">${stk('🏦', 'Statement', 5, 'right:10px;top:-8px', 'yellow')}<h2>🏦 Bank / card statement upload</h2>
+      <div class="sub" style="margin-bottom:8px">PDF (password wala bhi ✅), CSV ya Excel → saari entries import, duplicates skip, card bill reminder auto.</div>
+      <select id="stAcc"><option value="">🆕 Account khud pehchano (naya ho toh bana dega)</option>${D.accounts.map(a => `<option ${a.name === IMPACC ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select>
+      <input id="stPw" type="password" autocomplete="off" style="margin-top:8px" placeholder="PDF password (agar hai) — sirf is device pe use hota hai 🔒">
+      <label class="drop" for="stFile" style="margin-top:8px;padding:16px"><b style="font-size:34px">📄</b>Statement choose karo<br><span class="sub">PDF · CSV · XLS · XLSX</span></label>
+      <input id="stFile" type="file" accept="application/pdf,.pdf,.csv,.xls,.xlsx" style="display:none" onchange="importStatement(this.files[0]);this.value=''">
+      <div style="margin-top:10px">${STMTLOG.map(impRow).join('')}</div></div>`;
+  }
+  function loadPdfJs() {
+    if (PDFJS) return Promise.resolve(PDFJS);
+    const base = 'https:' + '/' + '/cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+    return new Promise((ok, bad) => {
+      const s = document.createElement('script');
+      s.src = base + 'pdf.min.js';
+      s.onload = () => { PDFJS = window.pdfjsLib; PDFJS.GlobalWorkerOptions.workerSrc = base + 'pdf.worker.min.js'; ok(PDFJS); };
+      s.onerror = () => bad(new Error('PDF reader load nahi hua — internet check karo 📶'));
+      document.head.appendChild(s);
+    });
+  }
+  async function pdfPages(buf, pw) {
+    const lib = await loadPdfJs();
+    let doc;
+    try { doc = await lib.getDocument({ data: buf, password: pw || undefined }).promise; }
+    catch (e) {
+      if (e && e.name === 'PasswordException') throw new Error(pw ? 'PDF password galat hai 🔒 Dobara try karo' : 'Ye PDF password-protected hai 🔒 Upar password daalo (aksar DOB, customer ID ya PAN ka hissa hota hai)');
+      throw e;
+    }
+    const pages = [];
+    for (let p = 1; p <= Math.min(doc.numPages, 40); p++) {
+      const page = await doc.getPage(p);
+      const tc = await page.getTextContent();
+      const rows = {};
+      tc.items.forEach(it => { if (!it.str || !it.str.trim()) return; const y = Math.round(it.transform[5] / 3); (rows[y] = rows[y] || []).push({ x: it.transform[4], s: it.str }); });
+      const lines = Object.keys(rows).map(Number).sort((a, b) => b - a).map(y => rows[y].sort((a, b) => a.x - b.x).map(o => o.s).join('  ').replace(/\s{3,}/g, '  ').trim());
+      pages.push({ text: lines.join('\n'), page });
+    }
+    return pages;
+  }
+  async function pageToJpeg(page) {
+    const vp = page.getViewport({ scale: 1.6 });
+    const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+    await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    return c.toDataURL('image/jpeg', 0.8).split(',')[1];
+  }
+  function txtB64(s) { return btoa(unescape(encodeURIComponent(s))); }
+  async function importStatement(file) {
+    if (!file) return;
+    const acc = (document.getElementById('stAcc') || {}).value || '', pw = (document.getElementById('stPw') || {}).value || '';
+    const row = { name: file.name, status: 'busy', msg: 'Statement padh rahe hain… ' + pick(D.lines.scanWait) };
+    STMTLOG = [row].concat(STMTLOG).slice(0, 10); render();
+    const upd = m => { row.msg = m; if (TAB === 'jaadu') render(); };
+    const tot = { found: 0, added: 0, dup: 0, spent: 0, income: 0, account: acc, fix: null };
+    const send = async (payload, label) => {
+      upd('🪄 ' + label + ' — AI entries padh raha hai…');
+      const r = await apiCall('import', Object.assign({ account: acc, statement: true, light: true, hint: 'bank/card statement' }, payload));
+      const s = r.stats || {};
+      ['found', 'added', 'dup', 'spent', 'income'].forEach(k => { tot[k] += s[k] || 0; });
+      if (s.account) tot.account = s.account;
+      if (r.fix) tot.fix = r.fix;
+    };
+    try {
+      if (file.size > 15e6) throw new Error('File 15MB se badi hai 🐘');
+      if (!(/pdf$/i.test(file.type) || /\.pdf$/i.test(file.name))) {
+        await send({ name: file.name, mime: file.type, b64: await readB64(file) }, file.name);
+      } else {
+        upd('🔓 PDF khol rahe hain…');
+        const pages = await pdfPages(new Uint8Array(await file.arrayBuffer()), pw);
+        const chars = pages.reduce((n, p) => n + p.text.length, 0);
+        if (chars > pages.length * 80) {
+          const chunks = []; let cur = '', cnt = 0;
+          pages.forEach((p, i) => {
+            const t = '--- Page ' + (i + 1) + ' ---\n' + p.text + '\n';
+            if (cur && (cur.length + t.length > 9000 || cnt >= 3)) { chunks.push(cur); cur = ''; cnt = 0; }
+            cur += t; cnt++;
+          });
+          if (cur) chunks.push(cur);
+          for (let i = 0; i < chunks.length; i++) {
+            await send({ name: file.name + '.part' + (i + 1) + '.txt', mime: 'text/plain', b64: txtB64(chunks[i]), hint: 'bank/card statement, part ' + (i + 1) + ' of ' + chunks.length }, 'Part ' + (i + 1) + '/' + chunks.length);
+          }
+        } else {
+          for (let i = 0; i < Math.min(pages.length, 12); i++) {
+            await send({ name: file.name + '.p' + (i + 1) + '.jpg', mime: 'image/jpeg', b64: await pageToJpeg(pages[i].page), hint: 'scanned bank/card statement page ' + (i + 1) }, 'Page ' + (i + 1) + '/' + pages.length);
+          }
+        }
+      }
+      applyRes(await apiCall('dashboard'));
+      row.status = 'ok'; row.fix = tot.fix;
+      row.msg = '🏦 ' + (tot.account || 'Statement') + '\n🔍 ' + tot.found + ' entries mili · ✅ ' + tot.added + ' naye · ♻️ ' + tot.dup + ' pehle se the\n🔻 Kharcha ' + inr(tot.spent) + ' · 🟢 Aaya ' + inr(tot.income);
+      showSticker({ e: '🏦', t: 'Statement imported' }); rain(['📄', '✨', '💸'], 20);
+    } catch (e) { row.status = 'err'; row.msg = errText(e); }
+    render();
+  }
+
   /* ── JAADU (scanner) ── */
   let IMPLOG = [], IMPACC = '';
   function vJaadu() {
@@ -535,7 +677,8 @@
     return `<div class="card hero" style="margin-top:12px"><div class="l">🪄 Jaadu Scanner</div><div class="nw" style="font-size:24px">Photo daalo, hisaab lo</div>
       <div class="row2">Payment screenshot → 1 entry · Statement → saari entries, duplicates skip, card bill reminder auto</div></div>
     <div class="grid">
-      <div class="card"><h2>📤 Upload</h2>
+      ${stmtCard()}
+      <div class="card"><h2>📸 Payment screenshots</h2>
         <label class="drop" id="drop" for="files"><b>📸</b>Tap karke choose karo<br><span class="sub">Screenshots · PDF · CSV · Excel — ek saath kai files</span></label>
         <input id="files" type="file" multiple accept="image/png,image/jpeg,image/webp,image/heic,.jpg,.jpeg,.png,.pdf,.csv,.xls,.xlsx,.txt" style="display:none" onchange="pickFiles(this.files);this.value=''">
         <select id="impAcc" style="margin-top:10px" onchange="IMPACC=this.value"><option value="">🤖 Account: khud pehchano</option>${D.accounts.map(a => `<option ${a.name === IMPACC ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select>
@@ -654,6 +797,7 @@
         <div class="sub">${esc(a.kind.replace('_', ' '))}${a.last4 ? ' · ..' + esc(a.last4) : ''}${a.limit ? ' · free ' + inr(a.available) + ' of ' + inrS(a.limit) : ''}</div>
         ${a.limit ? `<div class="bar ${p > 80 ? 'red' : p > 50 ? 'amber' : ''}" style="width:160px"><i style="width:${p}%"></i></div>` : ''}</div></div>
         <div style="text-align:right"><b class="${a.liability && a.value > 0 ? 'neg' : ''}">${inr(a.value)}</b><br>
+        <button class="ghost" title="Statement upload" onclick="IMPACC='${jsq(a.name)}';go('jaadu')">📄</button>
         ${a.name !== D.defaultAccount ? `<button class="ghost" onclick="call('setDefault',{name:'${jsq(a.name)}'})">⭐</button>` : ''}</div></div>`;
     };
     return `<div class="stats">${stat('Tere paas', inr(D.assets), '🏦', 'pos')}${stat('Tujh pe udhaar', inr(D.liabilities), '💳', 'neg')}${stat('Net worth', inr(D.netWorth), '👑')}</div>
