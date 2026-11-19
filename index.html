@@ -206,6 +206,19 @@
   body.ca nav button { flex-basis: 74px; }
   body.ca .logo span { background: none; color: var(--text); }
   .ca-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  .munshi { border: 1px solid color-mix(in srgb, var(--accent, #7c5cff) 45%, transparent); background: linear-gradient(135deg, color-mix(in srgb, var(--accent, #7c5cff) 10%, var(--card)), var(--card)); }
+  .mbrief { margin: 10px 0 4px; padding-left: 18px; line-height: 1.5; }
+  .mbrief li { margin: 3px 0; }
+  .mchips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .mchip { font-size: 12px; padding: 3px 9px; border-radius: 99px; background: var(--card2); }
+  .mchip.ok b { color: var(--green); } .mchip.warn b { color: var(--amber, #f5a524); }
+  .mrev { border-top: 1px solid var(--line, rgba(127,127,127,.2)); padding: 10px 0; }
+  .mnote { font-size: 12px; opacity: .75; word-break: break-word; margin-top: 2px; }
+  .mto { margin-top: 4px; font-weight: 600; }
+  .mbtns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .mbtns button { padding: 5px 10px; font-size: 13px; }
+  .mpulse { animation: mpulse 1.4s ease-in-out infinite; }
+  @keyframes mpulse { 50% { opacity: .45; } }
   .ca-bar select { width: auto; padding: 7px 9px; }
   .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
@@ -386,6 +399,60 @@
   let CA = null, CAFY = store.get('cafy', ''), CABUSY = false, CAERR = '', LEDSEL = '', CASIM = false, DBN = 150;
   let CLASSIC = store.get('classic', 'on') === 'on', BANKS = null, BANKEDIT = null, BANKSHOW = {};
   const DBF = { q: '', head: '', month: '', flag: '' };
+  let MUNSHI = null, MUNSHIBUSY = false, MUNSHIERR = '';
+
+  /* ── 🤖 Munshi Ji: auto-accountant card (brief + stats + "needs your nod") ── */
+  function loadMunshi(fresh) {
+    if (MUNSHIBUSY) return;
+    MUNSHIBUSY = true; MUNSHIERR = '';
+    apiCall('munshi', { fun: MODE !== 'ca', fresh: !!fresh }).then(res => { MUNSHI = res.munshi; MUNSHI.fun = MODE !== 'ca'; })
+      .catch(e => { MUNSHIERR = errText(e); }).then(() => { MUNSHIBUSY = false; munshiRefresh(); });
+  }
+  function munshiRefresh() { const b = document.getElementById('munshiBox'); if (b) b.innerHTML = munshiInner(); }
+  function munshiCard() {
+    if ((!MUNSHI || MUNSHI.fun !== (MODE !== 'ca')) && !MUNSHIERR) setTimeout(() => loadMunshi(false), 0);
+    return `<div class="card munshi" id="munshiBox" style="margin-top:12px">${munshiInner()}</div>`;
+  }
+  function munshiInner() {
+    const fun = MODE !== 'ca';
+    if (MUNSHIERR) return `<h2>🤖 Munshi Ji</h2><div class="sub">${esc(MUNSHIERR)}</div><button class="ghost" style="margin-top:8px" onclick="MUNSHIERR='';loadMunshi(true)">Retry</button>`;
+    if (!MUNSHI || MUNSHI.fun !== fun) return `<h2>🤖 Munshi Ji</h2><div class="sub mpulse">${fun ? 'Munshi Ji hisaab dekh rahe hain… 🧐' : 'Munshi Ji is going through your books…'}</div>`;
+    const m = MUNSHI, s = m.stats, b = m.brief, rv = m.review || [];
+    const chip = (v, l, c) => `<span class="mchip ${c || ''}"><b>${v}</b> ${l}</span>`;
+    const sure = rv.filter(r => r.conf >= 0.7 && r.head);
+    const items = rv.slice(0, 12).map(r => `<div class="mrev">
+        <div class="flex" style="justify-content:space-between;gap:8px;align-items:flex-start"><div style="min-width:0">
+          <b>${inr(r.amt)}</b> <span class="sub">${r.type === 'income' ? 'received' : 'paid'} · ${esc(fd2(r.date))} · ${esc(r.acc)}</span>
+          <div class="mnote">${esc(r.note.slice(0, 90))}</div>
+          ${r.head ? `<div class="mto">→ ${esc(r.label)}${r.conf ? ` <span class="sub">(${Math.round(r.conf * 100)}% sure${r.why ? ' — ' + esc(r.why) : ''})</span>` : ''}</div>` : '<div class="sub">Not sure where this goes.</div>'}</div></div>
+        <div class="mbtns">${r.head ? `<button class="btn" onclick="munshiDecide(['${jsq(r.id)}'],{})">✓ ${fun ? 'Haan' : 'Post'}</button><button class="ghost" onclick="munshiDecide(['${jsq(r.id)}'],{always:true})">✓ ${fun ? 'Hamesha aise' : 'Always for this payee'}</button>` : ''}
+          ${MODE === 'ca' ? `<button class="ghost" onclick="munshiChange('${jsq(r.id)}')">Change…</button>` : ''}<button class="ghost" onclick="munshiDecide(['${jsq(r.id)}'],{keep:true})">${fun ? 'Rehne do' : 'Keep as is'}</button></div></div>`).join('');
+    return `<div class="flex" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">🤖 Munshi Ji ${fun ? 'ka report' : '— overview'}</h2>
+        <span class="sub">${b.by === 'ai' ? '🧠 AI' : '📏 rules'} · ${esc(fd2(b.at))}</span></div>
+      <ul class="mbrief">${b.lines.map(l => `<li>${esc(l)}</li>`).join('')}</ul>
+      <div class="mchips">${chip(s.auto, fun ? 'khud post kiye' : 'auto-posted', 'ok')}${chip(s.review, fun ? 'teri haan chahiye' : 'need your nod', s.review ? 'warn' : '')}${chip(s.rules, fun ? 'payees yaad' : 'payees learned')}${s.pending ? chip(s.pending, fun ? 'abhi dekhne baaki' : 'not yet sorted', 'warn') : ''}</div>
+      ${s.ai ? '' : `<div class="hint">${fun ? 'AI key nahi hai, isliye Munshi Ji sirf rules se kaam kar rahe hain. Gemini ki free key daalo, phir woh naam aur entries khud samjhenge.' : 'No AI key is set, so only the rules are running. Add a free Gemini key (SETUP.md) and Munshi Ji will read narrations himself.'}</div>`}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" id="mSort" onclick="munshiSort(this)">⚡ ${fun ? 'Abhi hisaab lagao' : 'Sort pending entries now'}</button>
+        <button class="ghost" onclick="MUNSHI=null;munshiRefresh();loadMunshi(true)">↻ ${fun ? 'Naya overview' : 'Refresh overview'}</button>
+        ${sure.length > 1 ? `<button class="ghost" onclick="munshiDecide(${esc(JSON.stringify(sure.map(r => r.id)))},{})">✓ ${fun ? 'Sab sahi hai (' + sure.length + ')' : 'Post all ' + sure.length + ' suggestions'}</button>` : ''}</div>
+      ${rv.length ? `<h2 style="margin-top:14px">👀 ${fun ? 'Teri haan chahiye' : 'Needs your nod'} <span class="sub">(${rv.length})</span></h2>${items}${rv.length > 12 ? `<div class="sub">+${rv.length - 12} more — approve these first.</div>` : ''}` : ''}
+      <div class="sub" style="margin-top:10px">${fun ? 'Munshi Ji har upload ke baad aur har raat khud hisaab lagate hain. Tu jo bhi sudhaarega, woh yaad rakhenge.' : 'Runs on its own after every statement upload and nightly. Every correction you make becomes a rule for that payee.'}</div>`;
+  }
+  function munshiSort(btn) {
+    if (btn) { btn.disabled = true; btn.textContent = MODE === 'ca' ? 'Working…' : 'Soch rahe hain… 🧐'; }
+    apiCall('munshiRun', { fun: MODE !== 'ca' }).then(res => munshiApply(res)).catch(e => { showVibe(errText(e), null, 'Munshi Ji'); if (btn) { btn.disabled = false; btn.textContent = '⚡ Retry'; } });
+  }
+  function munshiDecide(ids, opt) {
+    apiCall('munshiDecide', Object.assign({ ids: ids, fun: MODE !== 'ca' }, opt || {})).then(res => munshiApply(res)).catch(e => showVibe(errText(e), null, 'Munshi Ji'));
+  }
+  function munshiApply(res) {
+    if (res.munshi) { MUNSHI = res.munshi; MUNSHI.fun = MODE !== 'ca'; }
+    if (res.data) { D = res.data; saveCache(); }
+    if (MODE === 'ca') CA = null;
+    render();
+    if (res.msg) showVibe(res.msg, MODE === 'ca' ? null : '🤖', 'Munshi Ji');
+  }
+  function munshiChange(id) { DBF.q = id; DBF.head = ''; DBF.month = ''; DBF.flag = ''; go('ca_day'); }
 
   /* ── utils ── */
   function inr(n) { n = Number(n) || 0; return (n < 0 ? '-' : '') + '₹' + Math.abs(n).toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
@@ -597,6 +664,7 @@
       <div class="l">👑 Net worth</div><div class="nw">${inr(D.netWorth)}</div>
       <div class="row2"><span>🏦 Paas: ${inrS(D.assets)}</span><span>💳 Udhaar: ${inrS(D.liabilities)}</span>${D.receivable ? `<span>🤝 Dost denge: ${inrS(D.receivable)}</span>` : ''}</div>
       <div class="row2" style="margin-top:8px;font-style:italic">${D.netWorth < 0 ? '"Picture abhi baaki hai mere dost" 🎬 — it\'s giving comeback arc' : '"Mere paas balance hai" 😎 — just looking like a wow 🤌'}</div></div>
+    ${munshiCard()}
     <div class="card aura-card" style="margin-top:12px" onclick="showSticker({e:'${a.emoji}',t:'${esc(a.tier)}'})">
       <div class="glow">${a.emoji}</div>
       <div class="flex" style="justify-content:space-between"><div><h2 style="margin:0">✨ Aura points</h2><div class="big">${a.score.toLocaleString('en-IN')}</div></div>
@@ -1399,7 +1467,7 @@
     const warn = t.warnings.slice();
     a.coverage.forEach(c => warn.push(c.account + ': no entries for ' + c.missing.join(', ') + ' — upload statements for these months.'));
     if (a.idle && a.idle.length) warn.push('No entries at all this FY in: ' + a.idle.join(', ') + '. Import their statements if they were used.');
-    return `<div class="stats">
+    return `${munshiCard()}<div class="stats">
       ${cstat('Total income', fa(ie.totalIncome + ie.biz.receipts))}${cstat('Total expenditure', fa(ie.totalExpense + ie.biz.totalExp))}
       ${cstat('Surplus / (deficit)', fa(ie.surplus), ie.surplus < 0 ? 'neg' : 'pos')}${cstat('Net worth — closing', fa(bs.capital.close))}
       ${cstat('Net worth — opening', fa(bs.capital.open))}${cstat('Tax — ' + (t.best === 'new' ? 'new' : 'old') + ' regime', fa(best.tax))}
