@@ -217,6 +217,10 @@
   .mto { margin-top: 4px; font-weight: 600; }
   .mbtns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .mbtns button { padding: 5px 10px; font-size: 13px; }
+  .mdet { margin-top: 6px; }
+  .mdet summary { cursor: pointer; }
+  .mline { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; padding: 6px 0; border-top: 1px dashed var(--line, rgba(127,127,127,.2)); font-size: 13px; }
+  .mline .mbtns button { padding: 2px 8px; }
   .mpulse { animation: mpulse 1.4s ease-in-out infinite; }
   @keyframes mpulse { 50% { opacity: .45; } }
   .ca-bar select { width: auto; padding: 7px 9px; }
@@ -419,14 +423,20 @@
     if (!MUNSHI || MUNSHI.fun !== fun) return `<h2>🤖 Munshi Ji</h2><div class="sub mpulse">${fun ? 'Munshi Ji hisaab dekh rahe hain… 🧐' : 'Munshi Ji is going through your books…'}</div>`;
     const m = MUNSHI, s = m.stats, b = m.brief, rv = m.review || [];
     const chip = (v, l, c) => `<span class="mchip ${c || ''}"><b>${v}</b> ${l}</span>`;
-    const sure = rv.filter(r => r.conf >= 0.7 && r.head);
-    const items = rv.slice(0, 12).map(r => `<div class="mrev">
-        <div class="flex" style="justify-content:space-between;gap:8px;align-items:flex-start"><div style="min-width:0">
-          <b>${inr(r.amt)}</b> <span class="sub">${r.type === 'income' ? 'received' : 'paid'} · ${esc(fd2(r.date))} · ${esc(r.acc)}</span>
-          <div class="mnote">${esc(r.note.slice(0, 90))}</div>
-          ${r.head ? `<div class="mto">→ ${esc(r.label)}${r.conf ? ` <span class="sub">(${Math.round(r.conf * 100)}% sure${r.why ? ' — ' + esc(r.why) : ''})</span>` : ''}</div>` : '<div class="sub">Not sure where this goes.</div>'}</div></div>
-        <div class="mbtns">${r.head ? `<button class="btn" onclick="munshiDecide(['${jsq(r.id)}'],{})">✓ ${fun ? 'Haan' : 'Post'}</button><button class="ghost" onclick="munshiDecide(['${jsq(r.id)}'],{always:true})">✓ ${fun ? 'Hamesha aise' : 'Always for this payee'}</button>` : ''}
-          ${MODE === 'ca' ? `<button class="ghost" onclick="munshiChange('${jsq(r.id)}')">Change…</button>` : ''}<button class="ghost" onclick="munshiDecide(['${jsq(r.id)}'],{keep:true})">${fun ? 'Rehne do' : 'Keep as is'}</button></div></div>`).join('');
+    const sure = rv.filter(g => g.conf >= 0.7 && g.head && !g.person);
+    const sureIds = [].concat.apply([], sure.map(g => g.ids));
+    const ids = g => esc(JSON.stringify(g.ids));
+    const nE = n => n + (n === 1 ? ' entry' : ' entries');
+    const items = rv.slice(0, 20).map((g, gi) => `<div class="mrev">
+        <div style="min-width:0"><b>${esc(g.person || g.label)}</b> <span class="sub">${nE(g.n)}${g.paid ? ' · ' + (fun ? 'diya ' : 'paid ') + inr(g.paid) : ''}${g.got ? ' · ' + (fun ? 'aaya ' : 'received ') + inr(g.got) : ''}</span>
+          <div class="mto">→ ${esc(g.label)}${g.conf ? ` <span class="sub">(${Math.round(g.conf * 100)}% sure${g.why ? ' — ' + esc(g.why) : ''})</span>` : ''}</div>
+          ${g.family ? `<div class="hint" style="margin-top:6px">👪 ${fun ? 'Family lag raha hai (same surname). Relative se mila paisa gift hai to tax-free (s. 56(2)(x)); wapas dena hai to loan.' : 'Same surname as you — likely a relative. Money received from a relative is an exempt gift u/s 56(2)(x); post as a loan only if it is to be repaid.'}</div>` : ''}
+          <details class="mdet"><summary class="sub">${fun ? 'Entries dekho' : 'Show entries'}</summary>${g.items.map(r => `<div class="mline"><span>${esc(fd2(r.date))} · ${r.type === 'income' ? '+' : '−'}${inr(r.amt)} · ${esc(r.acc)}<div class="mnote">${esc(r.note)}</div></span>
+            <span class="mbtns" style="margin:0"><button class="ghost" onclick="munshiDecide(['${jsq(r.id)}'],{})">✓</button><button class="ghost" onclick="munshiDecide(['${jsq(r.id)}'],{keep:true})">✕</button>${MODE === 'ca' ? `<button class="ghost" onclick="munshiChange('${jsq(r.id)}')">…</button>` : ''}</span></div>`).join('')}${g.n > g.items.length ? `<div class="sub">+${g.n - g.items.length} smaller entries</div>` : ''}</details></div>
+        <div class="mbtns"><button class="btn" onclick="munshiDecide(${ids(g)},{})">✓ ${g.n > 1 ? (fun ? 'Haan, sab (' + g.n + ')' : 'Post all ' + g.n) : (fun ? 'Haan' : 'Post')}</button>
+          <button class="ghost" onclick="munshiDecide(${ids(g)},{always:true})">✓ ${fun ? 'Hamesha aise' : 'Always for this payee'}</button>
+          ${g.person ? `<button class="ghost" onclick="munshiDecide(${ids(g)},{as:'gift'})">🎁 ${g.family ? (fun ? 'Family gift' : 'Gift (relative)') : (fun ? 'Gift tha' : 'Gift')}</button><button class="ghost" onclick="munshiDecide(${ids(g)},{as:'expense'})">${fun ? 'Kharcha / income' : 'Personal exp. / other income'}</button>` : ''}
+          <button class="ghost" onclick="munshiDecide(${ids(g)},{keep:true})">${fun ? 'Rehne do' : 'Keep as is'}</button></div></div>`).join('');
     return `<div class="flex" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">🤖 Munshi Ji ${fun ? 'ka report' : '— overview'}</h2>
         <span class="sub">${b.by === 'ai' ? '🧠 AI' : '📏 rules'} · ${esc(fd2(b.at))}</span></div>
       <ul class="mbrief">${b.lines.map(l => `<li>${esc(l)}</li>`).join('')}</ul>
@@ -434,8 +444,8 @@
       ${s.ai ? '' : `<div class="hint">${fun ? 'AI key nahi hai, isliye Munshi Ji sirf rules se kaam kar rahe hain. Gemini ki free key daalo, phir woh naam aur entries khud samjhenge.' : 'No AI key is set, so only the rules are running. Add a free Gemini key (SETUP.md) and Munshi Ji will read narrations himself.'}</div>`}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" id="mSort" onclick="munshiSort(this)">⚡ ${fun ? 'Abhi hisaab lagao' : 'Sort pending entries now'}</button>
         <button class="ghost" onclick="MUNSHI=null;munshiRefresh();loadMunshi(true)">↻ ${fun ? 'Naya overview' : 'Refresh overview'}</button>
-        ${sure.length > 1 ? `<button class="ghost" onclick="munshiDecide(${esc(JSON.stringify(sure.map(r => r.id)))},{})">✓ ${fun ? 'Sab sahi hai (' + sure.length + ')' : 'Post all ' + sure.length + ' suggestions'}</button>` : ''}</div>
-      ${rv.length ? `<h2 style="margin-top:14px">👀 ${fun ? 'Teri haan chahiye' : 'Needs your nod'} <span class="sub">(${rv.length})</span></h2>${items}${rv.length > 12 ? `<div class="sub">+${rv.length - 12} more — approve these first.</div>` : ''}` : ''}
+        ${sureIds.length > 1 ? `<button class="ghost" onclick="munshiDecide(${esc(JSON.stringify(sureIds))},{})">✓ ${fun ? 'Non-person sab sahi (' + sureIds.length + ')' : 'Post all ' + sureIds.length + ' non-person suggestions'}</button>` : ''}</div>
+      ${rv.length ? `<h2 style="margin-top:14px">👀 ${fun ? 'Teri haan chahiye' : 'Needs your nod'} <span class="sub">(${s.review} ${fun ? 'entries' : 'entries'} in ${rv.length} ${rv.length === 1 ? 'group' : 'groups'})</span></h2>${items}${rv.length > 20 ? `<div class="sub">+${rv.length - 20} smaller groups — they appear as you clear these.</div>` : ''}` : ''}
       <div class="sub" style="margin-top:10px">${fun ? 'Munshi Ji har upload ke baad aur har raat khud hisaab lagate hain. Tu jo bhi sudhaarega, woh yaad rakhenge.' : 'Runs on its own after every statement upload and nightly. Every correction you make becomes a rule for that payee.'}</div>`;
   }
   function munshiSort(btn) {
