@@ -1131,10 +1131,11 @@
   function vDost() {
     return `<div class="stats">${stat('Dost denge', inr(D.receivable), '🟢', 'pos')}${stat('Tu dega', inr(D.payable), '🔴', 'neg')}</div>
     <div class="grid">
-      <div class="card"><h2>🤝 Hisaab</h2>${D.people.map(p => `<div class="row"><div class="flex"><div class="acc-ic">${p.value > 0 ? '🫵' : '🙇'}</div><div><b>${esc(p.name)}</b>
-        <div class="sub">${p.value > 0 ? 'tujhe dega — "Raju, paise de de" 😩' : 'ko tu dega — chal bhar de 🙏'}</div></div></div>
-        <div style="text-align:right"><b class="${p.value > 0 ? 'pos' : 'neg'}">${inr(Math.abs(p.value))}</b><br><button class="ghost" onclick="if(confirm('Settle ${jsq(p.name)}?'))call('settle',{name:'${jsq(p.name)}'})">🤝 Settle</button></div></div>`).join('')
-        || empty('🙌', 'Sabke saath barabar. "Yaari hai imaan mera"')}</div>
+      <div class="card"><h2>🤝 Hisaab</h2>${D.people.map(p => `<div class="row" style="cursor:pointer" onclick="openPerson('${jsq(p.name)}')"><div class="flex"><div class="acc-ic">${p.value > 0 ? '🫵' : '🙇'}</div><div><b>${esc(p.name)}</b>
+        <div class="sub">${p.value > 0 ? 'tujhe dega — "Raju, paise de de" 😩' : 'ko tu dega — chal bhar de 🙏'}${p.entries ? ' · ' + p.entries + ' entries' : ''} · tap for poora hisaab 📒</div></div></div>
+        <div style="text-align:right"><b class="${p.value > 0 ? 'pos' : 'neg'}">${inr(Math.abs(p.value))}</b><br><button class="ghost" onclick="event.stopPropagation();if(confirm('Settle ${jsq(p.name)}?'))call('settle',{name:'${jsq(p.name)}'})">🤝 Settle</button></div></div>`).join('')
+        || empty('🙌', 'Sabke saath barabar. "Yaari hai imaan mera"')}
+        ${(D.settledPeople || []).length ? `<div class="sub" style="margin-top:10px">Settled: ${D.settledPeople.map(p => `<a href="#" onclick="openPerson('${jsq(p.name)}');return false">${esc(p.name)}</a>`).join(' · ')}</div>` : ''}</div>
       <div class="card"><h2>🍕 Bill split karo</h2><form class="f" onsubmit="splitSubmit(event)">
         <input name="amount" type="number" min="1" placeholder="₹ Total bill" required>
         <input name="note" placeholder="Kis cheez ka? (dinner)">
@@ -1148,6 +1149,26 @@
         <input name="to" list="pplList" class="full" placeholder="Dost ka naam" required><datalist id="pplList">${D.people.map(p => `<option value="${esc(p.name)}">`).join('')}</datalist>
         <button class="btn full">Likh lo ✍️</button></form></div>
     </div>`;
+  }
+
+  /* a friend's full ledger (all years) in a sheet-style modal */
+  function openPerson(name) {
+    openModal(`<div id="personBox"><div class="loader"><b>📒</b>${esc(name)} ka poora hisaab khol rahe hain…</div></div>`);
+    apiCall('ledgerAll', { key: 'P:' + name }).then(res => {
+      const L = res.ledger, box = document.getElementById('personBox');
+      if (!box) return;
+      box.innerHTML = `<h3>📒 ${esc(L.person)}</h3><div class="sub">Loans & advances ledger · har entry, har saal</div>${ledgerStatement(L)}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <button class="btn" onclick="personQuick('gave','${jsq(L.person)}')">🫴 Maine diya</button><button class="btn" onclick="personQuick('took','${jsq(L.person)}')">🤲 Wapas mila</button>
+          ${Math.abs(L.close) >= 0.01 ? `<button class="ghost" onclick="if(confirm('Settle ${jsq(L.person)}?')){closeModal();call('settle',{name:'${jsq(L.person)}'})}">🤝 Settle ${fa(Math.abs(L.close))}</button>` : ''}
+          <button class="ghost" onclick="closeModal()">Close</button></div>`;
+    }).catch(e => { const box = document.getElementById('personBox'); if (box) box.innerHTML = '<div class="sub neg">' + esc(errText(e)) + '</div>'; });
+  }
+  function personQuick(type, name) {
+    const amt = prompt((type === 'gave' ? 'Kitna diya ' : 'Kitna mila ') + name + ' se? (₹)');
+    if (!amt || !(Number(amt) > 0)) return;
+    const note = prompt('Note (optional):', '') || '';
+    call('addTx', { type: type, amount: Number(amt), account: D.defaultAccount, to: name, note: note }, () => openPerson(name));
   }
 
   /* ── WRAPPED ── */
@@ -1442,12 +1463,24 @@
     const opts = CA.options[e.type] || [];
     const autoLbl = e.manual ? 'Auto' : 'Auto — ' + nm(e.key);
     const head = e.type === 'transfer' ? `<select disabled><option>Contra — ${esc(nm(e.dr))}</option></select>`
-      : `<select onchange="caTag('${jsq(e.id)}','ledger',this.value)">${opts.map(o => `<option value="${esc(o[0])}" ${o[0] === (e.ov || '') ? 'selected' : ''}>${esc(o[0] ? o[1] : autoLbl)}</option>`).join('')}</select>`;
+      : `<select onchange="pickHead('${jsq(e.id)}',this)">${opts.filter(o => o[0] !== 'PERSON').map(o => `<option value="${esc(o[0])}" ${o[0] === (e.ov || '') ? 'selected' : ''}>${esc(o[0] ? o[1] : autoLbl)}</option>`).join('')}
+        <optgroup label="Loans & advances — person">${(CA.people || []).map(p => `<option value="P:${esc(p.name)}" ${(e.ov || '') === 'P:' + p.name || (!e.manual && e.key === 'P:' + p.name && e.type !== 'gave' && e.type !== 'took') ? 'selected' : ''}>🤝 ${esc(p.name)}</option>`).join('')}
+        <option value="__newp">➕ New person…</option></optgroup></select>`;
     const tagAuto = e.tagManual ? 'Tax tag: auto' : 'Tax tag: auto — ' + (e.tag || 'none');
     const tag = `<select onchange="caTag('${jsq(e.id)}','tag',this.value)"><option value="">${esc(tagAuto)}</option>${Object.keys(CA.tags).map(k => `<option value="${esc(k)}" ${k === (e.tg || '') ? 'selected' : ''}>${esc(CA.tags[k])}</option>`).join('')}</select>`;
     return `<div class="dbrow"><div class="l1"><div style="min-width:0"><div class="sub">${fd2(e.date)} · ${esc(e.type)} · #${esc(e.id)}${e.manual ? ' · <b>re-classified</b>' : ''}</div>
       <div class="ellip"><b>Dr</b> ${esc(nm(e.dr))}</div><div class="ellip"><b>Cr</b> ${esc(nm(e.cr))}</div>${e.note ? `<div class="sub ellip">${esc(e.note)}</div>` : ''}</div>
       <div class="mono" style="font-weight:700;white-space:nowrap">${fa(e.amt)}</div></div><div class="sel">${head}${tag}</div></div>`;
+  }
+  function pickHead(id, sel) {
+    let v = sel.value;
+    if (v === '__newp') {
+      const e = CA.report.dayBook.find(x => x.id === id), guess = e ? String(e.note || '').replace(/[^A-Za-z ]+/g, ' ').replace(/\b(upi|neft|imps|to|from|by|transfer|paid|payment)\b/gi, ' ').replace(/\s+/g, ' ').trim() : '';
+      const name = prompt('Friend\'s name for the loans & advances ledger:', guess.split(' ').slice(0, 2).join(' '));
+      if (!name || !name.trim()) { render(); return; }
+      v = 'P:' + name.trim();
+    }
+    caTag(id, 'ledger', v);
   }
   function caTag(id, field, val) {
     const e = CA.report.dayBook.find(x => x.id === id);
@@ -1462,12 +1495,24 @@
   /* Ledgers */
   function cLed() {
     const r = CA.report;
-    if (LEDSEL) { const l = r.ledgers.find(x => x.key === LEDSEL); if (l) return ledDetail(l); LEDSEL = ''; }
+    if (LEDSEL && LEDALL) return ledAllView(LEDSEL);
+    if (LEDSEL) { const l = r.ledgers.find(x => x.key === LEDSEL); if (l) return ledDetail(l); if (LEDSEL.indexOf('P:') === 0) { LEDALL = true; return ledAllView(LEDSEL); } LEDSEL = ''; }
     const by = {};
     r.ledgers.forEach(l => { (by[l.group] = by[l.group] || []).push(l); });
-    return Object.keys(GROUP_LABEL).filter(g => by[g]).map(g => `<div class="card" style="margin-top:12px"><h2>${GROUP_LABEL[g]}</h2><div class="tbl-wrap"><table class="tbl">
+    const people = CA.people || [];
+    const loansCard = people.length ? (() => {
+      const rec = people.filter(p => p.value > 0).reduce((s, p) => s + p.value, 0), pay = people.filter(p => p.value < 0).reduce((s, p) => s - p.value, 0);
+      return `<div class="card" style="margin-top:12px"><h2>🤝 Loans & Advances — control account</h2>
+        <div class="stats" style="margin-top:4px">${cstat('Receivable (they owe you)', fa(rec), 'pos')}${cstat('Payable (you owe)', fa(pay), 'neg')}${cstat('Net', fdc(rec - pay))}</div>
+        <div class="tbl-wrap" style="margin-top:8px"><table class="tbl"><tr><th>Sub-ledger (person)</th><th class="n">Entries</th><th class="n">Balance today</th><th>Status</th></tr>
+        ${people.map(p => `<tr class="click" onclick="openLedger('P:${jsq(p.name)}')"><td><b>${esc(p.name)}</b>${p.last ? `<div class="sub">last ${fd2(p.last)}</div>` : ''}</td><td class="n">${p.entries}</td>
+          <td class="n">${fdc(p.value)}</td><td class="sub">${Math.abs(p.value) < 0.01 ? 'Settled' : p.value > 0 ? 'Owes you' : 'You owe'}</td></tr>`).join('')}
+        <tr class="tot"><td>Total</td><td></td><td class="n">${fdc(rec - pay)}</td><td></td></tr></table></div>
+        <div class="hint">Tap a person for every transaction with them, across all years. Give a UPI to a friend this head from the Day Book ("Loans & advances → name") and it lands in their ledger.</div></div>`;
+    })() : '';
+    return loansCard + Object.keys(GROUP_LABEL).filter(g => by[g] && !(g === 'person' && people.length)).map(g => `<div class="card" style="margin-top:12px"><h2>${GROUP_LABEL[g]}</h2><div class="tbl-wrap"><table class="tbl">
       <tr><th>Ledger</th><th class="n">Opening</th><th class="n">Debit</th><th class="n">Credit</th><th class="n">Closing</th></tr>
-      ${by[g].map(l => `<tr class="click" onclick="LEDSEL='${jsq(l.key)}';render();window.scrollTo({top:0})"><td>${esc(l.name)}</td><td class="n">${l.real ? fdc(l.open) : '—'}</td><td class="n">${fa(l.dr)}</td><td class="n">${fa(l.cr)}</td><td class="n">${fdc(l.real ? l.close : l.dr - l.cr)}</td></tr>`).join('')}
+      ${by[g].map(l => `<tr class="click" onclick="openLedger('${jsq(l.key)}')"><td>${esc(l.name)}</td><td class="n">${l.real ? fdc(l.open) : '—'}</td><td class="n">${fa(l.dr)}</td><td class="n">${fa(l.cr)}</td><td class="n">${fdc(l.real ? l.close : l.dr - l.cr)}</td></tr>`).join('')}
       </table></div></div>`).join('') + '<div class="hint">Tap a ledger for the full account with running balance and opening-balance setting.</div>';
   }
   function ledDetail(l) {
@@ -1483,6 +1528,7 @@
     const what = l.group === 'liability' ? 'amount outstanding' : l.group === 'person' ? 'positive = they owe you' : 'balance';
     const isLoan = l.kind === 'loan', rate = (CA.loanRates || {})[l.key.slice(2)] || '';
     return `<div class="card" style="margin-top:12px"><button class="ghost" onclick="LEDSEL='';render()">← All ledgers</button>
+      ${l.real ? `<div class="seg" style="float:right"><button class="on">${esc(r.label)}</button><button onclick="LEDALL=true;render()">All years</button></div>` : ''}
       <h3 style="margin-top:10px">${esc(l.name)}</h3><div class="sub">${GROUP_LABEL[l.group] || ''} · ${esc(r.label)}</div>
       ${isLoan ? `<div class="flex" style="margin-top:10px;flex-wrap:wrap"><span class="sub">Interest rate (% p.a.) — EMIs are split into principal (reduces this loan${/home|housing/i.test(l.name) ? ', 80C' : ''}) and interest${/home|housing/i.test(l.name) ? ' (24(b))' : ''}:</span>
         <input id="lrate" type="number" step="0.01" style="width:110px" value="${rate}"><button class="ghost" onclick="caLoan('${jsq(l.key)}')">Save rate</button></div>` : ''}
@@ -1493,6 +1539,37 @@
       <tr class="sec"><td></td><td>Opening balance</td><td></td><td></td><td class="n">${l.real ? fdc(l.open) : '—'}</td></tr>${rows}
       <tr class="tot"><td></td><td>Closing balance</td><td class="n">${fa(l.dr)}</td><td class="n">${fa(l.cr)}</td><td class="n">${fdc(l.real ? l.close : l.dr - l.cr)}</td></tr></table></div></div>`;
   }
+  /* Ledger across all years (e.g. a friend's loan account from day one) */
+  let LEDALL = false;
+  const LEDCACHE = {};
+  function openLedger(key) { LEDSEL = key; LEDALL = key.indexOf('P:') === 0; delete LEDCACHE[key]; render(); window.scrollTo({ top: 0 }); }
+  function loadLedgerAll(key, cb) { apiCall('ledgerAll', { key: key }).then(res => { LEDCACHE[key] = res.ledger; cb && cb(); }).catch(e => { LEDCACHE[key] = { error: errText(e) }; cb && cb(); }); }
+  function ledAllView(key) {
+    const L = LEDCACHE[key];
+    if (!L) { loadLedgerAll(key, () => { if (MODE === 'ca' && CATAB === 'ca_led' && LEDSEL === key) render(); }); return '<div class="loader"><b>📒</b>Opening the full ledger…</div>'; }
+    if (L.error) return `<div class="card" style="margin-top:12px"><button class="ghost" onclick="LEDSEL='';LEDALL=false;render()">← All ledgers</button><div class="sub neg" style="margin-top:8px">${esc(L.error)}</div></div>`;
+    const inFy = (CA.report.ledgers || []).some(l => l.key === L.key);
+    return `<div class="card" style="margin-top:12px"><button class="ghost" onclick="LEDSEL='';LEDALL=false;render()">← All ledgers</button>
+      ${inFy ? `<div class="seg" style="float:right"><button onclick="LEDALL=false;render()">${esc(CA.report.label)}</button><button class="on">All years</button></div>` : ''}
+      <h3 style="margin-top:10px">${esc(L.person || L.name)}</h3><div class="sub">${L.person ? 'Loans & advances — sub-ledger · every transaction, all years' : esc(GROUP_LABEL[L.group] || '') + ' · all years'}</div>
+      ${ledgerStatement(L)}</div>`;
+  }
+  /* shared by CA mode and the Dost tab */
+  function ledgerStatement(L) {
+    const owes = L.close > 0.004 ? (L.person ? esc(L.person) + ' owes you' : 'Debit balance') : L.close < -0.004 ? (L.person ? 'You owe ' + esc(L.person) : 'Credit balance') : 'Settled';
+    const hdr = L.person ? ['You gave / paid', 'You got back'] : ['Debit', 'Credit'];
+    let lastFy = null;
+    return `<div class="stats" style="margin-top:8px">${cstat(hdr[0], fa(L.dr))}${cstat(hdr[1], fa(L.cr))}${cstat(owes, fa(Math.abs(L.close)), L.close > 0 ? 'pos' : L.close < 0 ? 'neg' : '')}</div>
+      ${L.years.length > 1 ? `<div class="tbl-wrap" style="margin-top:8px"><table class="tbl"><tr><th>Year</th><th class="n">${hdr[0]}</th><th class="n">${hdr[1]}</th><th class="n">Closing</th></tr>
+        ${L.years.map(y => `<tr><td style="white-space:nowrap">${esc(y.label)}</td><td class="n">${fa(y.dr)}</td><td class="n">${fa(y.cr)}</td><td class="n">${fdc(y.close)}</td></tr>`).join('')}</table></div>` : ''}
+      <div class="tbl-wrap" style="margin-top:10px"><table class="tbl"><tr><th>Date</th><th>Particulars</th><th class="n">${hdr[0]}</th><th class="n">${hdr[1]}</th><th class="n">Balance</th></tr>
+      <tr class="sec"><td></td><td>Opening balance</td><td></td><td></td><td class="n">${fdc(L.open)}</td></tr>
+      ${L.rows.map(x => { const sep = x.fy !== lastFy ? `<tr class="sec"><td colspan="5">${esc(fyLabelC(x.fy))}</td></tr>` : ''; lastFy = x.fy;
+        return sep + `<tr><td style="white-space:nowrap">${fd2(x.date)}</td><td>${x.dr ? 'To' : 'By'} ${esc(x.part)}${x.note ? `<div class="sub">${esc(x.note)}${x.via ? ' · via ' + esc(x.via) : ''}</div>` : ''}</td>
+          <td class="n">${x.dr ? fa(x.dr) : ''}</td><td class="n">${x.cr ? fa(x.cr) : ''}</td><td class="n">${fdc(x.bal)}</td></tr>`; }).join('') || '<tr><td colspan="5" class="sub">No transactions yet</td></tr>'}
+      <tr class="tot"><td></td><td>Closing balance</td><td class="n">${fa(L.dr)}</td><td class="n">${fa(L.cr)}</td><td class="n">${fdc(L.close)}</td></tr></table></div>`;
+  }
+  function fyLabelC(y) { return 'FY ' + y + '-' + String(y + 1).slice(-2); }
   function caLoan(key) {
     const v = Number(document.getElementById('lrate').value);
     apiCall('caLoan', { key: key, rate: v, fy: CA.fy }).then(res => { CA = res.ca; render(); showVibe(res.msg, null, 'Saved'); }).catch(caErr);
