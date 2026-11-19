@@ -217,6 +217,46 @@
   .mto { margin-top: 4px; font-weight: 600; }
   .mbtns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .mbtns button { padding: 5px 10px; font-size: 13px; }
+  .tly { margin-top: 12px; }
+  .tly-top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: space-between; margin-bottom: 10px; }
+  .tly-crumb { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+  .tly-crumb a { color: var(--accent, #7c5cff); text-decoration: none; }
+  .tly-back { padding: 2px 10px; }
+  .tly-go { position: relative; flex: 1 1 260px; max-width: 380px; }
+  .tly-go input { width: 100%; }
+  .tly-golist { display: none; position: absolute; z-index: 30; left: 0; right: 0; top: 100%; margin-top: 4px; background: var(--card); border: 1px solid var(--line, rgba(127,127,127,.25)); border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  .tly-gi { display: flex; justify-content: space-between; gap: 10px; padding: 8px 12px; cursor: pointer; }
+  .tly-gi:hover { background: var(--card2); }
+  .tly-sheet, .tly-co, .tly-menu { background: var(--card); border: 1px solid var(--line, rgba(127,127,127,.2)); border-radius: 14px; padding: 14px; }
+  .tly-h { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 2px solid color-mix(in srgb, #14b8a6 60%, transparent); }
+  .tly-gw { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tly-mh { background: linear-gradient(90deg, #0f766e, #14b8a6); color: #fff; font-weight: 700; padding: 8px 12px; border-radius: 10px; text-align: center; margin-bottom: 6px; }
+  .tly-ms { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .6; margin: 10px 4px 2px; }
+  .tly-menu .trow { justify-content: flex-start; }
+  .tkey { display: inline-block; min-width: 22px; text-align: center; font-weight: 800; color: #14b8a6; margin-right: 8px; }
+  .trow { display: flex; justify-content: space-between; gap: 10px; padding: 7px 8px; border-radius: 8px; cursor: pointer; outline: none; }
+  tr.trow { display: table-row; }
+  .trow:hover { background: var(--card2); }
+  .trow.sel { background: color-mix(in srgb, #14b8a6 22%, transparent); box-shadow: inset 3px 0 0 #14b8a6; }
+  .tprim { font-weight: 700; }
+  .tsub { padding-left: 26px; font-size: 13.5px; opacity: .92; }
+  .tex { text-decoration: none; color: inherit; opacity: .7; display: inline-block; width: 14px; }
+  .tly-bs { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .tly-bs > div { padding: 0 10px; }
+  .tly-bs > div + div { border-left: 1px solid var(--line, rgba(127,127,127,.25)); }
+  .tly-colh { display: flex; justify-content: space-between; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; opacity: .65; padding: 6px 8px; border-bottom: 1px solid var(--line, rgba(127,127,127,.25)); margin-bottom: 4px; }
+  .tly-tot { display: flex; justify-content: space-between; font-weight: 800; padding: 8px; margin-top: 6px; border-top: 2px solid var(--line, rgba(127,127,127,.35)); border-bottom: 3px double var(--line, rgba(127,127,127,.35)); }
+  .tly-tr td { border-top: 2px solid var(--line, rgba(127,127,127,.35)); }
+  .tly-ctl { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; padding: 8px 0; }
+  .tly-ctl select, .tly-ctl input { margin-top: 2px; }
+  .tly-keys { font-size: 11.5px; opacity: .6; margin-top: 10px; line-height: 1.6; }
+  .ghost.on { background: color-mix(in srgb, #14b8a6 25%, transparent); }
+  .nowrap { white-space: nowrap; }
+  @media (max-width: 720px) {
+    .tly-gw, .tly-bs { grid-template-columns: 1fr; }
+    .tly-bs > div + div { border-left: 0; border-top: 1px solid var(--line, rgba(127,127,127,.25)); margin-top: 10px; padding-top: 6px; }
+    .tly-keys { display: none; }
+  }
   .mdet { margin-top: 6px; }
   .mdet summary { cursor: pointer; }
   .mline { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; padding: 6px 0; border-top: 1px dashed var(--line, rgba(127,127,127,.2)); font-size: 13px; }
@@ -391,9 +431,9 @@
     set(k, v) { try { localStorage.setItem('kgmp_' + k, v); } catch (e) {} },
   };
   let VIBE = store.get('vibe', 'on') === 'on';
-  const CA_TABS = [['ca_over', '📊', 'Overview'], ['ca_day', '📒', 'Day Book'], ['ca_led', '📚', 'Ledgers'], ['ca_tb', '⚖️', 'Trial Bal.'],
+  const CA_TABS = [['ca_tally', '📗', 'Gateway'], ['ca_over', '📊', 'Overview'], ['ca_day', '📒', 'Day Book'], ['ca_led', '📚', 'Ledgers'], ['ca_tb', '⚖️', 'Trial Bal.'],
     ['ca_pl', '📈', 'I&E / P&L'], ['ca_bs', '🏛️', 'Bal. Sheet'], ['ca_itr', '🧾', 'ITR / Tax'], ['ca_an', '🔬', 'Analytics'], ['ca_bank', '🏦', 'Bank A/cs'], ['ca_imp', '📥', 'Import']];
-  const CA_TITLES = { ca_over: 'Overview', ca_day: 'Day Book (journal)', ca_led: 'Ledgers', ca_tb: 'Trial Balance', ca_pl: 'Income & Expenditure / P&L',
+  const CA_TITLES = { ca_tally: 'Gateway of Books', ca_over: 'Overview', ca_day: 'Day Book (journal)', ca_led: 'Ledgers', ca_tb: 'Trial Balance', ca_pl: 'Income & Expenditure / P&L',
     ca_bs: 'Balance Sheet', ca_itr: 'Income-tax computation', ca_an: 'Analytics', ca_bank: 'Bank accounts', ca_imp: 'Import statements' };
   const GROUP_LABEL = { asset: 'Assets — bank, cash & wallets', invest: 'Investments', fixed: 'Fixed assets — business (WDV)', passet: 'Personal assets', person: 'Loans & advances (people)', suspense: 'Suspense',
     liability: 'Liabilities — cards, pay-later & loans', income: 'Income', expense: 'Expenditure', capital: 'Capital' };
@@ -1460,8 +1500,9 @@
     }
     const r = CA.report;
     g.textContent = r.label + ' (' + r.ay + ') · ' + (r.current ? 'as on ' + fd2(r.asOn) : 'year ended ' + fd2(r.to));
-    const fn = { ca_over: cOver, ca_day: cDay, ca_led: cLed, ca_tb: cTB, ca_pl: cPL, ca_bs: cBS, ca_itr: cITR, ca_an: cAn, ca_bank: cBank, ca_imp: cImp }[CATAB] || cOver;
+    const fn = { ca_tally: cTally, ca_over: cOver, ca_day: cDay, ca_led: cLed, ca_tb: cTB, ca_pl: cPL, ca_bs: cBS, ca_itr: cITR, ca_an: cAn, ca_bank: cBank, ca_imp: cImp }[CATAB] || cOver;
     document.getElementById('app').innerHTML = '<section class="on">' + caBar() + fn() + '</section>';
+    if (CATAB === 'ca_tally') tAfter();
   }
   function caBar() {
     return `<div class="ca-bar"><select onchange="caFy(this.value)">${CA.fys.map(f => `<option value="${f.y}" ${f.y === CA.fy ? 'selected' : ''}>${f.label} · ${f.ay}</option>`).join('')}</select>
@@ -2048,6 +2089,376 @@
 
   function openModal(html) { document.getElementById('modalBox').innerHTML = html; document.getElementById('modal').classList.add('show'); }
   function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+  /* ══════════ 📗 TALLY-STYLE BOOKS: Gateway, then Balance Sheet / P&L / Trial Balance, then Group, Ledger, Voucher ══════════ */
+  const TGRP = [
+    ['cap', 'Capital Account', '', 'L'], ['capInc', 'Income credited to capital', 'cap'], ['draw', 'Drawings (personal expenses)', 'cap'],
+    ['loansL', 'Loans (Liability)', '', 'L'], ['secured', 'Secured Loans', 'loansL'], ['unsecured', 'Unsecured Loans', 'loansL'],
+    ['curL', 'Current Liabilities', '', 'L'], ['creditors', 'Sundry Creditors', 'curL'], ['cards', 'Credit Cards & Pay-later', 'curL'],
+    ['pl', 'Profit & Loss A/c', '', 'L'], ['plInc', 'Business Income', 'pl'], ['plExp', 'Business Expenses', 'pl'],
+    ['fa', 'Fixed Assets', '', 'A'], ['bizfa', 'Business Assets (WDV)', 'fa'], ['pa', 'Personal Assets', 'fa'],
+    ['inv', 'Investments', '', 'A'],
+    ['curA', 'Current Assets', '', 'A'], ['bank', 'Bank Accounts', 'curA'], ['cash', 'Cash-in-Hand', 'curA'], ['wallet', 'Wallets', 'curA'],
+    ['debtors', 'Sundry Debtors', 'curA'], ['loansA', 'Loans & Advances (Asset)', 'curA'], ['deposits', 'Deposits (Asset)', 'curA'],
+    ['susp', 'Suspense A/c', '', 'X']];
+  const T_PARTY = ['debtors', 'creditors', 'loansA', 'unsecured', 'deposits'];
+  let TSTK = [{ v: 'gw' }], TSEL = 0, TOPEN = {}, TMODEL = null, TQ = '', TLMODE = 'v';
+  function tGroupOf(l, pg, pk) {
+    const k = l.key;
+    if (k.indexOf('A:') === 0) return { bank: 'bank', cash: 'cash', wallet: 'wallet', investment: 'inv', credit_card: 'cards', paylater: 'cards', loan: 'secured' }[l.kind] || 'bank';
+    if (k.indexOf('P:') === 0) {
+      const n = k.slice(2);
+      if (pg[n] && T_PARTY.indexOf(pg[n]) >= 0) return pg[n];
+      const biz = pk[n] === 'business';
+      return l.close >= 0 ? (biz ? 'debtors' : 'loansA') : (biz ? 'creditors' : 'unsecured');
+    }
+    if (k === 'BS:invest' || k === 'BS:vda') return 'inv';
+    if (k === 'BS:fa') return 'bizfa';
+    if (k.indexOf('BS:pa:') === 0) return 'pa';
+    if (k === 'BS:suspense') return 'susp';
+    if (k === 'INC:business') return 'plInc';
+    if (k.indexOf('BIZ:') === 0) return 'plExp';
+    if (k === 'INC:refund') return 'draw';
+    if (k.indexOf('INC:') === 0) return 'capInc';
+    return 'draw';
+  }
+  function tNameOf(k) {
+    if (k === 'CAP') return 'Capital (opening balance)';
+    if (k.indexOf('A:') === 0 || k.indexOf('P:') === 0) return k.slice(2);
+    if (k === 'INC:refund') return 'Less: refunds & cashback';
+    if ((CA.incHeads || {})[k]) return CA.incHeads[k];
+    if ((CA.expFixed || {})[k]) return CA.expFixed[k];
+    if (k === 'BS:invest') return 'Investments (at cost)';
+    if (k === 'BS:vda') return 'Crypto / VDA (at cost)';
+    if (k === 'BS:fa') return 'Business fixed assets (WDV)';
+    if (k === 'BS:suspense') return 'Suspense A/c';
+    if (k.indexOf('BS:pa:') === 0) { const p = k.split(':'); return p.slice(3).join(':') + ' (' + p[2] + ')'; }
+    if (k.indexOf('BIZ:') === 0 || k.indexOf('EXP:') === 0) return k.slice(4);
+    return nm(k);
+  }
+  function tModel() {
+    if (TMODEL && TMODEL.ca === CA) return TMODEL;
+    const r = CA.report, pg = CA.partyGroups || {}, pk = CA.partyKinds || {};
+    const L = r.ledgers.map(l => Object.assign({}, l)), have = {};
+    L.forEach(l => { have[l.key] = 1; });
+    Object.keys(pg).forEach(n => { if (!have['P:' + n]) L.push({ key: 'P:' + n, name: n, group: 'person', real: true, kind: '', open: 0, dr: 0, cr: 0, close: 0 }); });
+    const oc = r.bs.capital.open;
+    L.push({ key: 'CAP', name: 'Capital', group: 'capital', real: true, kind: '', open: r2(-oc), dr: 0, cr: 0, close: r2(-oc), tg: 'cap' });
+    const G = {}, byKey = {};
+    TGRP.forEach(g => { G[g[0]] = { id: g[0], name: g[1], parent: g[2], side: g[3] || '', open: 0, dr: 0, cr: 0, close: 0, subs: [], leds: [] }; });
+    TGRP.forEach(g => { if (g[2]) G[g[2]].subs.push(g[0]); });
+    L.forEach(l => {
+      l.tg = l.tg || tGroupOf(l, pg, pk); l.tname = tNameOf(l.key); l.val = l.real ? l.close : r2(l.dr - l.cr); l.op = l.real ? l.open : 0;
+      byKey[l.key] = l;
+      for (let g = G[l.tg]; g; g = g.parent ? G[g.parent] : null) { g.open += l.op; g.dr += l.dr; g.cr += l.cr; g.close += l.val; }
+      G[l.tg].leds.push(l);
+    });
+    Object.keys(G).forEach(id => { const g = G[id]; ['open', 'dr', 'cr', 'close'].forEach(f => { g[f] = r2(g[f]); }); g.leds.sort((a, b) => Math.abs(b.val) - Math.abs(a.val) || a.tname.localeCompare(b.tname)); });
+    TMODEL = { ca: CA, L: L, G: G, byKey: byKey };
+    return TMODEL;
+  }
+  function tLive(g) { return Math.abs(g.close) >= 0.005 || Math.abs(g.dr) >= 0.005 || Math.abs(g.cr) >= 0.005 || g.leds.length > 0 || g.subs.some(s => tLive(TMODEL.G[s])); }
+  function tTop() { return TSTK[TSTK.length - 1]; }
+  function tPush(v) { TSTK.push(v); TSEL = 0; render(); window.scrollTo({ top: 0 }); }
+  function tPop() { if (TSTK.length > 1) { TSTK.pop(); TSEL = 0; render(); } }
+  function tTo(i) { TSTK = TSTK.slice(0, i + 1); TSEL = 0; render(); }
+  function tReset(v) { TSTK = [{ v: 'gw' }]; if (v) TSTK.push(v); TSEL = 0; render(); }
+  function tTitle(s) {
+    const M = TMODEL;
+    if (s.v === 'gw') return 'Gateway';
+    if (s.v === 'grp') return M.G[s.id] ? M.G[s.id].name : s.id;
+    if (s.v === 'led') return M.byKey[s.key] ? M.byKey[s.key].tname : tNameOf(s.key);
+    return { bs: 'Balance Sheet', pl: 'Profit & Loss A/c', tb: 'Trial Balance', coa: 'Chart of Accounts', lc: 'Ledger Creation', jv: 'Journal Voucher' }[s.v] || s.v;
+  }
+  function tAmt(v) { return Math.abs(v) < 0.005 ? '' : fa(Math.abs(v)); }
+  function tDc(v) { return Math.abs(v) < 0.005 ? '' : fa(Math.abs(v)) + (v > 0 ? ' Dr' : ' Cr'); }
+  const tRowAttr = (onclick, extra) => `class="trow ${extra || ''}" tabindex="-1" onclick="${onclick}"`;
+
+  function cTally() {
+    const M = tModel(), s = tTop();
+    const crumbs = TSTK.map((x, i) => i === TSTK.length - 1 ? `<b>${esc(tTitle(x))}</b>` : `<a href="#" onclick="tTo(${i});return false">${esc(tTitle(x))}</a>`).join(' <span class="sub">›</span> ');
+    const body = ({ gw: tGateway, bs: tBS, pl: tPL, tb: tTB, coa: tCOA, grp: tGroup, led: tLedger, lc: tLedCreate, jv: tJV }[s.v] || tGateway)(s);
+    return `<div class="tly">
+      <div class="tly-top"><div class="tly-crumb">${TSTK.length > 1 ? '<button class="ghost tly-back" onclick="tPop()" title="Back (Esc)">←</button>' : ''}${crumbs}</div>
+        <div class="tly-go"><input id="tGo" placeholder="Go to ledger / group / report…  (G)" value="${esc(TQ)}" oninput="TQ=this.value;tGoList()" onkeydown="tGoKey(event)" autocomplete="off"><div id="tGoList" class="tly-golist"></div></div></div>
+      ${body}
+      <div class="tly-keys">Keys: <b>↑↓</b> move · <b>Enter</b> open · <b>Esc</b> back · <b>B</b> Balance Sheet · <b>P</b> P&amp;L · <b>T</b> Trial Balance · <b>A</b> Chart of Accounts · <b>C</b> Create ledger · <b>J</b> / <b>F7</b> Journal · <b>D</b> Day Book · <b>G</b> Go to</div></div>`;
+  }
+
+  /* Gateway */
+  function tGateway() {
+    const M = TMODEL, G = M.G, r = CA.report, pf = (CA.itr && CA.itr.profile) || {};
+    const recv = G.debtors.close + G.loansA.close + G.deposits.close, pay = -(G.creditors.close + G.unsecured.close + G.cards.close + G.secured.close);
+    const item = (k, label, on) => `<div ${tRowAttr(on)}><span class="tkey">${k}</span>${label}</div>`;
+    return `<div class="tly-gw">
+      <div class="tly-co"><div class="sub">Company</div><h2 style="margin:2px 0 10px">${esc(pf.name || 'My Books')}</h2>
+        ${crow('Period', esc(r.label) + ' (' + esc(r.ay) + ')')}${crow(r.current ? 'As on' : 'Year ended', fd2(r.current ? r.asOn : r.to))}
+        ${crow('Capital / net worth', fa(r.bs.capital.close))}${crow('Bank & cash', fa(G.bank.close + G.cash.close + G.wallet.close))}
+        ${crow('Receivable (debtors + advances)', fa(recv))}${crow('Payable (creditors + loans + cards)', fa(pay))}
+        ${crow('Trial balance', Math.abs(r.tb.diff) < 0.01 ? '<span class="ok">Agreed ✓</span>' : '<span class="neg">Diff ' + fa(r.tb.diff) + '</span>')}</div>
+      <div class="tly-menu"><div class="tly-mh">Gateway of Books</div>
+        <div class="tly-ms">Masters</div>${item('A', 'Chart of Accounts', "tPush({v:'coa'})")}${item('C', 'Create Ledger', "tPush({v:'lc'})")}
+        <div class="tly-ms">Transactions</div>${item('J', 'Journal Voucher (F7)', "tPush({v:'jv'})")}${item('D', 'Day Book', "go('ca_day')")}
+        <div class="tly-ms">Reports</div>${item('B', 'Balance Sheet', "tPush({v:'bs'})")}${item('P', 'Profit &amp; Loss A/c', "tPush({v:'pl'})")}${item('T', 'Trial Balance', "tPush({v:'tb'})")}
+        ${item('G', 'Go to any ledger…', "document.getElementById('tGo').focus()")}${item('I', 'Income-tax computation', "go('ca_itr')")}</div></div>`;
+  }
+
+  /* Balance Sheet — Tally layout, Liabilities | Assets, groups expand inline */
+  function tBSRows(side) {
+    const M = TMODEL, G = M.G, sg = side === 'L' ? -1 : 1;
+    const prim = TGRP.filter(g => !g[2] && (g[3] === side || (g[3] === 'X' && (side === 'A' ? G[g[0]].close > 0 : G[g[0]].close < 0)))).map(g => G[g[0]]).filter(g => tLive(g) && (Math.abs(g.close) >= 0.005 || g.id === 'cap'));
+    let tot = 0;
+    const rows = prim.map(g => {
+      tot += sg * g.close;
+      const open = TOPEN[g.id];
+      const det = !open ? '' : g.subs.map(id => G[id]).filter(x => Math.abs(x.close) >= 0.005).map(x => `<div ${tRowAttr("tPush({v:'grp',id:'" + x.id + "'})", 'tsub')}><span>${esc(x.name)}</span><span class="mono">${fa(sg * x.close)}</span></div>`).join('') +
+        g.leds.filter(l => Math.abs(l.val) >= 0.005).slice(0, 12).map(l => `<div ${tRowAttr("tPush({v:'led',key:'" + jsq(l.key) + "'})", 'tsub')}><span>${esc(l.tname)}</span><span class="mono">${fa(sg * l.val)}</span></div>`).join('');
+      return `<div ${tRowAttr("tPush({v:'grp',id:'" + g.id + "'})", 'tprim')}><span><a href="#" class="tex" onclick="event.stopPropagation();TOPEN['${g.id}']=!TOPEN['${g.id}'];render();return false">${open ? '▾' : '▸'}</a> ${esc(g.name)}</span><span class="mono">${fa(sg * g.close)}</span></div>${det}`;
+    }).join('');
+    return { html: rows, tot: r2(tot) };
+  }
+  function tBS() {
+    const L = tBSRows('L'), A = tBSRows('A'), r = CA.report;
+    const allOpen = TGRP.filter(g => !g[2]).every(g => TOPEN[g[0]]);
+    return `<div class="tly-sheet"><div class="tly-h"><b>Balance Sheet</b> <span class="sub">${r.current ? 'as at ' + fd2(r.asOn) : 'as at ' + fd2(r.to)}</span>
+        <button class="ghost" style="margin-left:auto" onclick="TGRP.filter(g=>!g[2]).forEach(g=>{TOPEN[g[0]]=${allOpen ? 'false' : 'true'}});render()">${allOpen ? 'Condensed' : 'Detailed'} (F1)</button></div>
+      <div class="tly-bs"><div><div class="tly-colh"><span>Liabilities</span><span>₹</span></div>${L.html}<div class="tly-tot"><span>Total</span><span class="mono">${fa(L.tot)}</span></div></div>
+        <div><div class="tly-colh"><span>Assets</span><span>₹</span></div>${A.html}<div class="tly-tot"><span>Total</span><span class="mono">${fa(A.tot)}</span></div></div></div>
+      ${Math.abs(L.tot - A.tot) > 0.01 ? `<div class="neg" style="margin-top:8px">Difference ${fa(L.tot - A.tot)}</div>` : '<div class="sub" style="margin-top:8px">✓ Balance Sheet tallies.</div>'}</div>`;
+  }
+
+  /* Profit & Loss A/c — business only; personal income & drawings live in Capital Account */
+  function tPL() {
+    const G = TMODEL.G, inc = G.plInc.leds.filter(l => Math.abs(l.val) >= 0.005), exp = G.plExp.leds.filter(l => Math.abs(l.val) >= 0.005);
+    const ti = r2(-G.plInc.close), te = r2(G.plExp.close), np = r2(ti - te);
+    const side = (rows, tot, extra) => rows.map(l => `<div ${tRowAttr("tPush({v:'led',key:'" + jsq(l.key) + "'})")}><span>${esc(l.tname)}</span><span class="mono">${fa(Math.abs(l.val))}</span></div>`).join('') + extra + `<div class="tly-tot"><span>Total</span><span class="mono">${fa(tot)}</span></div>`;
+    const npRow = (lbl, v) => `<div class="trow tprim"><span>${lbl}</span><span class="mono">${fa(v)}</span></div>`;
+    const tot = Math.max(ti, te);
+    return `<div class="tly-sheet"><div class="tly-h"><b>Profit &amp; Loss A/c</b> <span class="sub">${esc(CA.report.label)}</span></div>
+      ${!inc.length && !exp.length ? '<div class="sub" style="margin:10px 0">No business entries this year. Your salary, interest and other personal income sit under <b>Capital Account → Income credited to capital</b>, and personal spending under <b>Capital Account → Drawings</b>.</div>' : ''}
+      <div class="tly-bs"><div><div class="tly-colh"><span>Particulars (Dr)</span><span>₹</span></div>${side(exp, tot, np > 0 ? npRow('Net Profit', np) : '')}</div>
+        <div><div class="tly-colh"><span>Particulars (Cr)</span><span>₹</span></div>${side(inc, tot, np < 0 ? npRow('Net Loss', -np) : '')}</div></div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="ghost" onclick="tPush({v:'grp',id:'capInc'})">Income credited to capital →</button><button class="ghost" onclick="tPush({v:'grp',id:'draw'})">Drawings →</button><button class="ghost" onclick="go('ca_pl')">Income &amp; Expenditure statement →</button></div></div>`;
+  }
+
+  /* Trial Balance — group-wise, expandable */
+  function tTB() {
+    const G = TMODEL.G, prim = TGRP.filter(g => !g[2]).map(g => G[g[0]]).filter(g => tLive(g) && Math.abs(g.close) >= 0.005);
+    let dr = 0, cr = 0;
+    const rows = prim.map(g => {
+      if (g.close > 0) dr += g.close; else cr -= g.close;
+      const det = !TOPEN['tb_' + g.id] ? '' : tFlat(g.id).filter(l => Math.abs(l.val) >= 0.005).map(l => `<tr ${tRowAttr("tPush({v:'led',key:'" + jsq(l.key) + "'})", 'tsub')}><td style="padding-left:26px">${esc(l.tname)} <span class="sub">${esc(TMODEL.G[l.tg].name)}</span></td><td class="n">${l.val > 0 ? fa(l.val) : ''}</td><td class="n">${l.val < 0 ? fa(-l.val) : ''}</td></tr>`).join('');
+      return `<tr ${tRowAttr("tPush({v:'grp',id:'" + g.id + "'})", 'tprim')}><td><a href="#" class="tex" onclick="event.stopPropagation();TOPEN['tb_${g.id}']=!TOPEN['tb_${g.id}'];render();return false">${TOPEN['tb_' + g.id] ? '▾' : '▸'}</a> ${esc(g.name)}</td><td class="n">${g.close > 0 ? fa(g.close) : ''}</td><td class="n">${g.close < 0 ? fa(-g.close) : ''}</td></tr>${det}`;
+    }).join('');
+    return `<div class="tly-sheet"><div class="tly-h"><b>Trial Balance</b> <span class="sub">${esc(CA.report.label)} · closing balances</span></div>
+      <div class="tbl-wrap"><table class="tbl"><tr><th>Particulars</th><th class="n">Debit</th><th class="n">Credit</th></tr>${rows}
+      <tr class="tly-tr"><td><b>Grand Total</b></td><td class="n"><b>${fa(dr)}</b></td><td class="n"><b>${fa(cr)}</b></td></tr></table></div>
+      ${Math.abs(dr - cr) > 0.01 ? `<div class="neg">Difference ${fa(dr - cr)}</div>` : '<div class="sub">✓ Debits equal credits.</div>'}</div>`;
+  }
+  function tFlat(id) { const g = TMODEL.G[id]; return g.leds.concat([].concat.apply([], g.subs.map(tFlat))); }
+
+  /* Chart of Accounts — the whole tree */
+  function tCOA() {
+    const G = TMODEL.G;
+    const node = (id, depth) => {
+      const g = G[id], n = tFlat(id).length;
+      return `<div ${tRowAttr("tPush({v:'grp',id:'" + id + "'})", depth ? 'tsub' : 'tprim')} style="padding-left:${8 + depth * 18}px"><span>${depth ? '└ ' : ''}${esc(g.name)} <span class="sub">${n} ledger${n === 1 ? '' : 's'}</span></span><span class="mono">${tDc(g.close)}</span></div>` +
+        g.subs.map(s => node(s, depth + 1)).join('');
+    };
+    return `<div class="tly-sheet"><div class="tly-h"><b>Chart of Accounts</b> <span class="sub">groups → sub-groups → ledgers</span><button class="btn" style="margin-left:auto" onclick="tPush({v:'lc'})">+ Create ledger (C)</button></div>
+      <div class="tly-colh"><span>Liabilities &amp; capital</span><span>Closing</span></div>${TGRP.filter(g => !g[2] && g[3] === 'L').map(g => node(g[0], 0)).join('')}
+      <div class="tly-colh" style="margin-top:10px"><span>Assets</span><span>Closing</span></div>${TGRP.filter(g => !g[2] && g[3] !== 'L').map(g => node(g[0], 0)).join('')}</div>`;
+  }
+
+  /* Group Summary */
+  function tGroup(s) {
+    const G = TMODEL.G, g = G[s.id];
+    if (!g) return '<div class="sub">Group not found.</div>';
+    const subs = g.subs.map(id => G[id]).filter(tLive);
+    const leds = g.leds.filter(l => l.key === 'CAP' || Math.abs(l.val) >= 0.005 || Math.abs(l.op) >= 0.005 || l.dr || l.cr || l.key.indexOf('P:') === 0);
+    const row = (on, name, x, cls) => `<tr ${tRowAttr(on, cls)}><td>${name}</td><td class="n">${tDc(x.op !== undefined ? x.op : x.open)}</td><td class="n">${tAmt(x.dr)}</td><td class="n">${tAmt(x.cr)}</td><td class="n"><b>${tDc(x.val !== undefined ? x.val : x.close)}</b></td></tr>`;
+    const party = T_PARTY.indexOf(g.id) >= 0 || g.id === 'loansA';
+    return `<div class="tly-sheet"><div class="tly-h"><b>Group Summary — ${esc(g.name)}</b>${g.parent ? ` <span class="sub">under ${esc(G[g.parent].name)}</span>` : ''}
+        ${party ? `<button class="btn" style="margin-left:auto" onclick="tPush({v:'lc',grp:'${g.id}'})">+ New ledger here</button>` : ''}</div>
+      <div class="tbl-wrap"><table class="tbl"><tr><th>Particulars</th><th class="n">Opening</th><th class="n">Debit</th><th class="n">Credit</th><th class="n">Closing</th></tr>
+      ${subs.map(x => row("tPush({v:'grp',id:'" + x.id + "'})", '<b>' + esc(x.name) + '</b>', x, 'tprim')).join('')}
+      ${leds.map(l => row("tPush({v:'led',key:'" + jsq(l.key) + "'})", esc(l.tname), l)).join('')}
+      <tr class="tly-tr"><td><b>Grand Total</b></td><td class="n">${tDc(g.open)}</td><td class="n"><b>${tAmt(g.dr)}</b></td><td class="n"><b>${tAmt(g.cr)}</b></td><td class="n"><b>${tDc(g.close)}</b></td></tr></table></div>
+      ${!subs.length && !leds.length ? '<div class="sub" style="margin-top:8px">No ledgers in this group yet.</div>' : ''}</div>`;
+  }
+
+  /* Ledger Vouchers (with monthly summary) */
+  const T_VCH = { expense: 'Payment', gave: 'Payment', income: 'Receipt', took: 'Receipt', transfer: 'Contra', journal: 'Journal' };
+  function tLedger(s) {
+    const M = TMODEL, key = s.key, l = M.byKey[key] || { key: key, tname: tNameOf(key), op: 0, dr: 0, cr: 0, val: 0, real: true, tg: '' };
+    let bal = l.op || 0;
+    const rows = CA.report.dayBook.filter(e => e.dr === key || e.cr === key).map(e => { const isDr = e.dr === key; bal = r2(bal + (isDr ? e.amt : -e.amt)); return { e: e, isDr: isDr, bal: bal }; });
+    const party = key.indexOf('P:') === 0, pname = party ? key.slice(2) : '', pg = (CA.partyGroups || {})[pname] || '';
+    const gName = M.G[l.tg] ? M.G[l.tg].name : '';
+    const ctl = !party ? '' : `<div class="tly-ctl"><label class="sub">Under group <select onchange="tPartySave('${jsq(pname)}',{group:this.value})">
+        ${T_PARTY.map(id => `<option value="${id}" ${l.tg === id ? 'selected' : ''}>${esc(TMODEL.G[id].name)}${!pg && l.tg === id ? ' (auto)' : ''}</option>`).join('')}</select></label>
+      <label class="sub">Opening on ${fd2(CA.report.from)} <span style="display:inline-flex;gap:4px"><input id="tOpen" type="number" step="0.01" value="${Math.abs(l.op || 0) ? Math.abs(l.op) : ''}" placeholder="0.00" style="width:120px">
+        <select id="tOpenDc"><option value="1" ${(l.op || 0) >= 0 ? 'selected' : ''}>Dr</option><option value="-1" ${(l.op || 0) < 0 ? 'selected' : ''}>Cr</option></select>
+        <button class="ghost" onclick="tPartySave('${jsq(pname)}',{opening:(Number(document.getElementById('tOpen').value)||0)*Number(document.getElementById('tOpenDc').value)})">Save</button></span></label>
+      <button class="ghost" onclick="openPerson('${jsq(pname)}')">All years</button><button class="ghost" onclick="tPush({v:'jv',dr:'${jsq(key)}'})">Journal (J)</button></div>`;
+    let body;
+    if (TLMODE === 'm') {
+      const mon = {}, order = [];
+      rows.forEach(x => { const k = ym(x.e.date); if (!mon[k]) { mon[k] = { dr: 0, cr: 0, bal: 0 }; order.push(k); } if (x.isDr) mon[k].dr += x.e.amt; else mon[k].cr += x.e.amt; mon[k].bal = x.bal; });
+      body = `<tr><th>Month</th><th class="n">Debit</th><th class="n">Credit</th><th class="n">Closing</th></tr>` + order.map(k => `<tr><td>${new Date(k + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</td><td class="n">${tAmt(mon[k].dr)}</td><td class="n">${tAmt(mon[k].cr)}</td><td class="n">${tDc(mon[k].bal)}</td></tr>`).join('');
+    } else {
+      body = `<tr><th>Date</th><th>Particulars</th><th>Vch type</th><th class="n">Debit</th><th class="n">Credit</th><th class="n">Balance</th></tr>
+        <tr><td></td><td><i>Opening balance</i></td><td></td><td class="n">${l.op > 0 ? fa(l.op) : ''}</td><td class="n">${l.op < 0 ? fa(-l.op) : ''}</td><td class="n">${tDc(l.op || 0)}</td></tr>` +
+        rows.map(x => `<tr ${tRowAttr("tVch('" + jsq(x.e.id) + "')")}><td class="nowrap">${esc(fd2(x.e.date))}</td><td>${x.isDr ? '' : '<span class="sub">By</span> '}${x.isDr ? '<span class="sub">To</span> ' : ''}${esc(tNameOf(x.isDr ? x.e.cr : x.e.dr))}<div class="mnote">${esc(String(x.e.note || '').slice(0, 80))}</div></td>
+          <td class="sub">${x.e.synthetic ? 'Journal' : (T_VCH[x.e.type] || 'Journal')}</td><td class="n">${x.isDr ? fa(x.e.amt) : ''}</td><td class="n">${x.isDr ? '' : fa(x.e.amt)}</td><td class="n">${tDc(x.bal)}</td></tr>`).join('');
+    }
+    return `<div class="tly-sheet"><div class="tly-h"><b>Ledger: ${esc(l.tname)}</b> <span class="sub">${esc(gName)}</span>
+        <span style="margin-left:auto;display:inline-flex;gap:6px"><button class="ghost ${TLMODE === 'v' ? 'on' : ''}" onclick="TLMODE='v';render()">Vouchers</button><button class="ghost ${TLMODE === 'm' ? 'on' : ''}" onclick="TLMODE='m';render()">Monthly</button></span></div>
+      ${ctl}
+      <div class="stats" style="margin:8px 0">${cstat('Opening', tDc(l.op || 0) || '0.00')}${cstat('Debit', fa(l.dr))}${cstat('Credit', fa(l.cr))}${cstat('Closing', tDc(l.val) || '0.00', l.val > 0 ? 'pos' : l.val < 0 ? 'neg' : '')}</div>
+      <div class="tbl-wrap"><table class="tbl">${body}
+      <tr class="tly-tr"><td colspan="${TLMODE === 'm' ? 1 : 3}"><b>Closing balance</b></td><td class="n"><b>${tAmt(l.dr)}</b></td><td class="n"><b>${tAmt(l.cr)}</b></td><td class="n"><b>${tDc(l.val)}</b></td></tr></table></div>
+      ${!rows.length ? '<div class="sub" style="margin-top:8px">No vouchers this year.</div>' : ''}</div>`;
+  }
+  function tVch(id) {
+    const e = CA.report.dayBook.find(x => x.id === id);
+    if (!e) return;
+    const vt = e.synthetic ? 'Journal' : (T_VCH[e.type] || 'Journal');
+    openModal(`<h3>${vt} voucher <span class="sub">${esc(e.id)}</span></h3><div class="sub">${esc(fd2(e.date))}${e.src ? ' · ' + esc(e.src) : ''}</div>
+      <table class="tbl" style="margin-top:10px"><tr><th>Particulars</th><th class="n">Debit</th><th class="n">Credit</th></tr>
+        <tr><td><b>Dr</b> ${esc(tNameOf(e.dr))}</td><td class="n">${fa(e.amt)}</td><td></td></tr>
+        <tr><td><b>Cr</b> ${esc(tNameOf(e.cr))}</td><td></td><td class="n">${fa(e.amt)}</td></tr></table>
+      <div style="margin-top:8px"><span class="sub">Narration:</span> ${esc(e.note || '—')}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="ghost" onclick="closeModal();tPush({v:'led',key:'${jsq(e.dr)}'})">Open ${esc(tNameOf(e.dr))}</button><button class="ghost" onclick="closeModal();tPush({v:'led',key:'${jsq(e.cr)}'})">Open ${esc(tNameOf(e.cr))}</button>
+        ${e.type === 'journal' && !e.synthetic ? `<button class="ghost neg" onclick="tJDel('${jsq(e.id)}')">Delete voucher</button>` : e.synthetic ? '' : `<button class="btn" onclick="closeModal();munshiChange('${jsq(e.id)}')">Alter head (Day Book)</button>`}
+        <button class="ghost" onclick="closeModal()">Close</button></div>`);
+  }
+
+  /* Ledger Creation (party sub-ledgers) */
+  function tLedCreate(s) {
+    const G = TMODEL.G, grp = s.grp || 'loansA';
+    return `<div class="tly-sheet"><div class="tly-h"><b>Ledger Creation</b> <span class="sub">party / sub-ledger</span></div>
+      <div class="setf">
+        <label class="sub">Name<input id="lcName" placeholder="e.g. Pan Shop, Sneha, Varsha Chawla" autocomplete="off"></label>
+        <label class="sub">Under<select id="lcGrp">${T_PARTY.map(id => `<option value="${id}" ${id === grp ? 'selected' : ''}>${esc(G[id].name)}</option>`).join('')}</select></label>
+        <label class="sub">Opening balance on ${fd2(CA.report.from)}<span style="display:flex;gap:4px"><input id="lcOpen" type="number" step="0.01" placeholder="0.00"><select id="lcDc"><option value="1">Dr</option><option value="-1">Cr</option></select></span></label></div>
+      <div class="hint" style="margin-top:8px"><b>Sundry Debtors</b>: people / firms who owe you for sales or services. <b>Sundry Creditors</b>: shops / suppliers you owe (e.g. a pan shop where you run a tab).
+        <b>Loans &amp; Advances (Asset)</b>: friends you lent to. <b>Unsecured Loans</b>: money you borrowed from family or friends. <b>Deposits</b>: security / rent deposits you paid.<br>
+        Bank, cash and card accounts are created in the Tijori; expense heads are your categories; income heads are fixed by the Income-tax Act.</div>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" onclick="tLedSave()">Create (Ctrl+A)</button><button class="ghost" onclick="tPop()">Cancel (Esc)</button></div></div>`;
+  }
+  function tLedSave() {
+    const name = (document.getElementById('lcName').value || '').trim();
+    if (!name) { showVibe('Enter a ledger name.', null, 'Ledger'); return; }
+    const v = Number(document.getElementById('lcOpen').value) || 0, dc = Number(document.getElementById('lcDc').value);
+    tPartySave(name, { group: document.getElementById('lcGrp').value, opening: v ? v * dc : '' }, true);
+  }
+  function tPartySave(name, opt, open) {
+    apiCall('caParty', Object.assign({ name: name, fy: CA.fy }, opt)).then(res => {
+      CA = res.ca; TMODEL = null;
+      if (open) { TSTK.pop(); TSTK.push({ v: 'led', key: 'P:' + res.party }); }
+      render(); showVibe(res.msg, null, 'Ledger');
+    }).catch(caErr);
+  }
+
+  /* Journal Voucher (F7) */
+  function tLedOpts(sel) {
+    const M = TMODEL, o = [], grp = (lbl, arr) => arr.length ? `<optgroup label="${esc(lbl)}">${arr.map(x => `<option value="${esc(x[0])}" ${x[0] === sel ? 'selected' : ''}>${esc(x[1])}</option>`).join('')}</optgroup>` : '';
+    const parties = M.L.filter(l => l.key.indexOf('P:') === 0).map(l => [l.key, l.tname + ' — ' + (M.G[l.tg] ? M.G[l.tg].name : '')]).sort((a, b) => a[1].localeCompare(b[1]));
+    const cats = (CA.expCats || []);
+    const real = [['BS:invest', 'Investments (at cost)'], ['BS:vda', 'Crypto / VDA'], ['BS:fa', 'Business fixed assets'], ['BS:suspense', 'Suspense A/c']].concat(M.L.filter(l => l.key.indexOf('BS:pa:') === 0).map(l => [l.key, l.tname]));
+    o.push('<option value="">— select ledger —</option>', '<option value="__new">+ New party ledger…</option>');
+    o.push(grp('Parties (debtors, creditors, loans, advances)', parties));
+    o.push(grp('Drawings / personal expenses', cats.map(c => ['EXP:' + c, c]).concat(Object.keys(CA.expFixed || {}).map(k => [k, CA.expFixed[k]]))));
+    o.push(grp('Business expenses', cats.map(c => ['BIZ:' + c, c])));
+    o.push(grp('Income', Object.keys(CA.incHeads || {}).filter(k => k !== 'INC:cg_est').map(k => [k, CA.incHeads[k]])));
+    o.push(grp('Assets & suspense', real));
+    if (sel && o.join('').indexOf('value="' + esc(sel) + '"') < 0) o.splice(1, 0, `<option value="${esc(sel)}" selected>${esc(tNameOf(sel))}</option>`);
+    return o.join('');
+  }
+  function tJNew(selEl) {
+    if (selEl.value !== '__new') return;
+    const n = (prompt('Name of the new party ledger:') || '').trim();
+    if (!n) { selEl.value = ''; return; }
+    const op = document.createElement('option'); op.value = 'P:' + n; op.textContent = n + ' (new)'; selEl.insertBefore(op, selEl.options[2]); selEl.value = op.value;
+  }
+  function tJV(s) {
+    const r = CA.report, d = r.current ? ymd(new Date()) : ymd(r.to);
+    return `<div class="tly-sheet"><div class="tly-h"><b>Journal Voucher</b> <span class="sub">non-cash entries: credit purchases / sales, adjustments, provisions</span></div>
+      <div class="setf">
+        <label class="sub">Date<input id="jvDate" type="date" value="${d}"></label>
+        <label class="sub">Dr (debit ledger)<select id="jvDr" onchange="tJNew(this)">${tLedOpts(s.dr || '')}</select></label>
+        <label class="sub">Cr (credit ledger)<select id="jvCr" onchange="tJNew(this)">${tLedOpts(s.cr || '')}</select></label>
+        <label class="sub">Amount<input id="jvAmt" type="number" step="0.01" placeholder="0.00"></label>
+        <label class="sub" style="grid-column:1/-1">Narration<input id="jvNar" placeholder="e.g. Paan & cigarettes on credit for October" autocomplete="off"></label></div>
+      <div class="hint" style="margin-top:8px">Examples — bought on credit at a pan shop: <b>Dr</b> Food · <b>Cr</b> Pan Shop (Sundry Creditors). Billed a client: <b>Dr</b> client (Sundry Debtors) · <b>Cr</b> Business receipts.
+        Money actually paid or received from a bank goes through the normal entry (Payment / Receipt), not a journal.</div>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" onclick="tJSave()">Accept (Ctrl+A)</button><button class="ghost" onclick="tPop()">Cancel (Esc)</button></div></div>`;
+  }
+  function tJSave() {
+    const g = id => (document.getElementById(id) || {}).value || '';
+    apiCall('caJournal', { date: g('jvDate'), dr: g('jvDr'), cr: g('jvCr'), amount: g('jvAmt'), narration: g('jvNar'), fy: CA.fy }).then(res => {
+      CA = res.ca; TMODEL = null; tPop(); showVibe(res.msg, null, 'Journal');
+    }).catch(caErr);
+  }
+  function tJDel(id) {
+    if (!confirm('Delete journal voucher ' + id + '? This cannot be undone.')) return;
+    apiCall('caJournalDel', { id: id, fy: CA.fy }).then(res => { closeModal(); CA = res.ca; TMODEL = null; render(); showVibe(res.msg, null, 'Journal'); }).catch(caErr);
+  }
+
+  /* Go To search (G) */
+  function tGoMatches() {
+    const q = TQ.toLowerCase().trim();
+    if (!q) return [];
+    const M = tModel(), out = [];
+    [['bs', 'Balance Sheet'], ['pl', 'Profit & Loss A/c'], ['tb', 'Trial Balance'], ['coa', 'Chart of Accounts'], ['jv', 'Journal Voucher'], ['lc', 'Ledger Creation']]
+      .forEach(x => { if (x[1].toLowerCase().indexOf(q) >= 0) out.push({ t: 'Report', n: x[1], v: { v: x[0] } }); });
+    TGRP.forEach(g => { if (g[1].toLowerCase().indexOf(q) >= 0) out.push({ t: 'Group', n: g[1], v: { v: 'grp', id: g[0] } }); });
+    M.L.forEach(l => { if (l.tname.toLowerCase().indexOf(q) >= 0) out.push({ t: (M.G[l.tg] || {}).name || 'Ledger', n: l.tname, v: { v: 'led', key: l.key }, b: l.val }); });
+    return out.slice(0, 10);
+  }
+  function tGoList() {
+    const box = document.getElementById('tGoList');
+    if (!box) return;
+    const m = tGoMatches();
+    box.innerHTML = m.map((x, i) => `<div class="tly-gi" onmousedown="tGoPick(${i})"><span>${esc(x.n)}</span><span class="sub">${esc(x.t)}${x.b !== undefined ? ' · ' + tDc(x.b) : ''}</span></div>`).join('');
+    box.style.display = m.length ? 'block' : 'none';
+  }
+  function tGoPick(i) { const m = tGoMatches()[i]; if (!m) return; TQ = ''; tReset(m.v); }
+  function tGoKey(e) { if (e.key === 'Enter') { e.preventDefault(); tGoPick(0); } else if (e.key === 'Escape') { TQ = ''; e.target.value = ''; e.target.blur(); tGoList(); } }
+
+  /* keyboard + selection */
+  function tAfter() {
+    const rows = [...document.querySelectorAll('.tly .trow')];
+    if (!rows.length) return;
+    TSEL = Math.max(0, Math.min(TSEL, rows.length - 1));
+    rows.forEach((r, i) => r.classList.toggle('sel', i === TSEL));
+  }
+  document.addEventListener('keydown', e => {
+    if (MODE !== 'ca' || CATAB !== 'ca_tally' || !CA) return;
+    if (document.getElementById('modal').classList.contains('show')) return;
+    const tag = (document.activeElement && document.activeElement.tagName) || '', typing = /INPUT|SELECT|TEXTAREA/.test(tag);
+    const top = tTop().v;
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A') && (top === 'jv' || top === 'lc')) { e.preventDefault(); top === 'jv' ? tJSave() : tLedSave(); return; }
+    if (e.key === 'F7') { e.preventDefault(); tPush({ v: 'jv' }); return; }
+    if (typing) { if (e.key === 'Escape') { document.activeElement.blur(); if (top === 'jv' || top === 'lc') tPop(); } return; }
+    const rows = [...document.querySelectorAll('.tly .trow')];
+    if (e.key === 'Escape') { e.preventDefault(); tPop(); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (!rows.length) return;
+      e.preventDefault(); TSEL = Math.max(0, Math.min(rows.length - 1, TSEL + (e.key === 'ArrowDown' ? 1 : -1))); tAfter();
+      rows[TSEL].scrollIntoView({ block: 'nearest' }); return;
+    }
+    if (e.key === 'Enter') { if (rows[TSEL]) { e.preventDefault(); rows[TSEL].click(); } return; }
+    if (e.key === 'F1') { e.preventDefault(); if (top === 'bs') { const all = TGRP.filter(g => !g[2]).every(g => TOPEN[g[0]]); TGRP.filter(g => !g[2]).forEach(g => { TOPEN[g[0]] = !all; }); render(); } return; }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key.toLowerCase(), map = { b: { v: 'bs' }, p: { v: 'pl' }, t: { v: 'tb' }, a: { v: 'coa' }, c: { v: 'lc' }, j: { v: 'jv' } };
+    if (map[k]) { e.preventDefault(); tReset(map[k]); return; }
+    if (k === 'd') { e.preventDefault(); go('ca_day'); return; }
+    if (k === 'i') { e.preventDefault(); go('ca_itr'); return; }
+    if (k === 'g' || k === 'l' || k === '/') { e.preventDefault(); const g = document.getElementById('tGo'); if (g) g.focus(); }
+  });
 
   /* ── boot ── */
   applyTheme();
