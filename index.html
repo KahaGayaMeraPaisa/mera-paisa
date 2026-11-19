@@ -15,7 +15,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
   :root {
     --bg: #f6f4ff; --card: #ffffff; --card2: #f1eeff; --text: #15121f; --muted: #6d6880; --line: #e6e1f5;
@@ -223,6 +223,83 @@
   table.classic td { border-left: 1px solid var(--line); }
   table.classic td.hd { font-weight: 700; background: var(--card2); }
   table.classic td.b { font-weight: 700; border-top: 1px solid var(--muted); }
+  /* ── speed: cheaper paint on phones, respect reduced motion ── */
+  @media (max-width: 700px) { nav { backdrop-filter: none; background: var(--card); } .card { box-shadow: none; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition: none !important; } }
+  /* ── 🏦 Tijori: bank vault ── */
+  .vault { position: relative; margin-top: 12px; border-radius: 22px; padding: 18px; overflow: hidden; color: #f8fafc;
+    background: radial-gradient(120% 140% at 15% 0%, #3b4252 0%, #1f2430 45%, #0d1017 100%); border: 1px solid #2b3240; }
+  .vault::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 2px, transparent 2px 6px); pointer-events: none; }
+  .vault .vrow { display: flex; gap: 16px; align-items: center; position: relative; }
+  .door-wrap { width: 132px; height: 132px; flex: none; perspective: 700px; position: relative; }
+  .door-in { position: absolute; inset: 8px; border-radius: 50%; background: radial-gradient(circle, #fde68a 0%, #f59e0b 55%, #92400e 100%);
+    display: grid; place-items: center; font-size: 40px; box-shadow: inset 0 0 22px rgba(0,0,0,.5); }
+  .door { position: absolute; inset: 0; border-radius: 50%; transform-origin: 0% 50%; transform-style: preserve-3d;
+    background: radial-gradient(circle at 35% 30%, #cbd5e1 0%, #94a3b8 30%, #475569 70%, #1e293b 100%);
+    box-shadow: 0 0 0 5px #334155, 0 0 0 9px #0f172a, 0 12px 30px rgba(0,0,0,.6); display: grid; place-items: center; }
+  .door::before { content: ""; position: absolute; inset: 14px; border-radius: 50%; border: 2px dashed rgba(15,23,42,.55); }
+  .bolt { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #f1f5f9, #64748b); box-shadow: 0 1px 2px rgba(0,0,0,.5); }
+  .wheel { width: 64px; height: 64px; border-radius: 50%; border: 6px solid #e2e8f0; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,.5), inset 0 0 0 4px #475569; }
+  .wheel i { position: absolute; left: 50%; top: 50%; width: 76px; height: 8px; margin: -4px 0 0 -38px; border-radius: 4px; background: linear-gradient(#f1f5f9, #94a3b8); }
+  .wheel i:nth-child(2) { transform: rotate(60deg); } .wheel i:nth-child(3) { transform: rotate(120deg); }
+  .wheel b { position: absolute; inset: 18px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #f8fafc, #64748b); }
+  .vault.anim .wheel { animation: spinWheel 1.1s cubic-bezier(.5,0,.3,1) forwards; }
+  .vault.anim .door { animation: openDoor 1s cubic-bezier(.6,0,.2,1) 1s forwards; }
+  @keyframes spinWheel { to { transform: rotate(540deg); } }
+  @keyframes openDoor { to { transform: rotateY(-105deg); } }
+  .vault.open .door { transform: rotateY(-105deg); }
+  .vault .nw-l { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #fcd34d; }
+  .vault .nw-v { font: 700 30px/1.1 "Space Grotesk", system-ui, sans-serif; letter-spacing: -.02em; background: linear-gradient(90deg, #fde68a, #f59e0b, #fde68a);
+    background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: goldShine 4s linear infinite; }
+  @keyframes goldShine { to { background-position: -200% 0; } }
+  .vault .chips3 { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .vault .chips3 span { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: 3px 10px; font-size: 12px; }
+  .coin { position: absolute; font-size: 18px; animation: coinUp 1.6s ease-out forwards; opacity: 0; pointer-events: none; }
+  @keyframes coinUp { 0% { opacity: 0; transform: translateY(10px) scale(.6); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateY(-90px) rotate(200deg) scale(1); } }
+  .wallet { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 10px 2px 16px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .wallet::-webkit-scrollbar { display: none; }
+  .ccard-wrap { flex: 0 0 min(320px, 84vw); aspect-ratio: 1.586 / 1; perspective: 1000px; scroll-snap-align: center; animation: cardIn .5s cubic-bezier(.2,1.2,.4,1) both; }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(18px) rotate(-3deg); } }
+  .ccard { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.2,.9,.3,1); cursor: pointer;
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); }
+  .ccard.flip { transform: rotateY(180deg); }
+  .cface { position: absolute; inset: 0; border-radius: 16px; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; color: #fff;
+    padding: 16px 18px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 14px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
+    background: linear-gradient(135deg, var(--c1), var(--c2)); }
+  .cface::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 110% -10%, rgba(255,255,255,.28), transparent 45%),
+    repeating-radial-gradient(circle at 120% 120%, rgba(255,255,255,.06) 0 2px, transparent 2px 9px); pointer-events: none; }
+  .cface::after { content: ""; position: absolute; top: -50%; left: -60%; width: 40%; height: 200%; transform: rotate(20deg);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.28), transparent); animation: sheen 5.5s ease-in-out infinite; pointer-events: none; }
+  .ccard-wrap:nth-child(2n) .cface::after { animation-delay: 1.6s; } .ccard-wrap:nth-child(3n) .cface::after { animation-delay: 3s; }
+  @keyframes sheen { 0%, 60% { left: -60%; } 100% { left: 140%; } }
+  .cback { transform: rotateY(180deg); justify-content: flex-start; gap: 6px; padding-top: 0; }
+  .ctop { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 1; }
+  .cbank { font-weight: 700; font-size: 16px; letter-spacing: .01em; text-shadow: 0 1px 2px rgba(0,0,0,.3); max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ckind { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; opacity: .85; text-align: right; }
+  .cmid { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
+  .emv { width: 42px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #fef3c7, #d4a017 45%, #fde68a 60%, #b8860b); position: relative; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+  .emv::before { content: ""; position: absolute; inset: 6px 4px; border: 1px solid rgba(80,50,0,.45); border-radius: 3px; }
+  .emv::after { content: ""; position: absolute; left: 50%; top: 4px; bottom: 4px; border-left: 1px solid rgba(80,50,0,.45); }
+  .nfc { width: 22px; height: 22px; opacity: .85; }
+  .cnum { font: 500 clamp(13px, 4.4vw, 17px)/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .12em; white-space: nowrap; overflow: hidden; text-shadow: 0 1px 0 rgba(0,0,0,.35), 0 -1px 0 rgba(255,255,255,.2); position: relative; z-index: 1; }
+  .cbot { display: flex; justify-content: space-between; align-items: flex-end; position: relative; z-index: 1; gap: 8px; }
+  .cholder { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; opacity: .9; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cbal { text-align: right; } .cbal small { display: block; font-size: 9px; letter-spacing: .14em; opacity: .8; } .cbal b { font-size: 17px; }
+  .netw { font: italic 800 18px/1 Arial, sans-serif; letter-spacing: -.02em; }
+  .mc { display: inline-flex; } .mc i { width: 22px; height: 22px; border-radius: 50%; display: block; } .mc i:first-child { background: #eb001b; } .mc i:last-child { background: #f79e1b; margin-left: -9px; opacity: .9; }
+  .stripe { height: 24px; margin: 12px -18px 4px; background: linear-gradient(#111, #333); flex: none; }
+  .cback { gap: 3px; padding-bottom: 12px; }
+  .cback .acts { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .cback .acts button { flex: none; padding: 3px 7px; font-size: 11px; }
+  .cback .bk { display: flex; justify-content: space-between; font-size: 12.5px; position: relative; z-index: 1; }
+  .cback .ubar { height: 6px; border-radius: 9px; background: rgba(255,255,255,.25); overflow: hidden; position: relative; z-index: 1; }
+  .cback .ubar i { display: block; height: 100%; background: #fff; }
+  .cback .acts { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-top: auto; position: relative; z-index: 2; }
+  .cback .acts button { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); color: #fff; border-radius: 8px; padding: 4px 8px; font-size: 11.5px; cursor: pointer; }
+  .cback .mini-tx { font-size: 11px; opacity: .9; position: relative; z-index: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .k-cash .cface { --c1: #14532d; --c2: #22c55e; } .k-cash .cface::before { background: repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 6px, transparent 6px 12px); }
+  .k-investment .cface { --c1: #78350f; --c2: #f59e0b; } .k-loan .cface { --c1: #0f172a; --c2: #475569; }
+  .wallet-h { display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px; }
   .bankrow { padding: 10px 0; border-bottom: 1px solid var(--line); }
   .bankrow:last-child { border-bottom: 0; }
   .dbrow { padding: 10px 0; border-bottom: 1px solid var(--line); }
@@ -301,7 +378,7 @@
     ['ca_pl', '📈', 'I&E / P&L'], ['ca_bs', '🏛️', 'Bal. Sheet'], ['ca_itr', '🧾', 'ITR / Tax'], ['ca_an', '🔬', 'Analytics'], ['ca_bank', '🏦', 'Bank A/cs'], ['ca_imp', '📥', 'Import']];
   const CA_TITLES = { ca_over: 'Overview', ca_day: 'Day Book (journal)', ca_led: 'Ledgers', ca_tb: 'Trial Balance', ca_pl: 'Income & Expenditure / P&L',
     ca_bs: 'Balance Sheet', ca_itr: 'Income-tax computation', ca_an: 'Analytics', ca_bank: 'Bank accounts', ca_imp: 'Import statements' };
-  const GROUP_LABEL = { asset: 'Assets — bank, cash & wallets', invest: 'Investments', person: 'Loans & advances (people)', suspense: 'Suspense',
+  const GROUP_LABEL = { asset: 'Assets — bank, cash & wallets', invest: 'Investments', fixed: 'Fixed assets — business (WDV)', passet: 'Personal assets', person: 'Loans & advances (people)', suspense: 'Suspense',
     liability: 'Liabilities — cards, pay-later & loans', income: 'Income', expense: 'Expenditure', capital: 'Capital' };
   let MODE = store.get('mode', 'fun') === 'ca' ? 'ca' : 'fun';
   let CATAB = store.get('catab', 'ca_over');
@@ -383,14 +460,23 @@
     let u;
     try { u = new URL(link); } catch (e) { return Promise.reject(new Error('Link galat hai 🙃')); }
     const k = u.searchParams.get('k'); u.search = ''; u.hash = '';
+    if (LINESC) data.lv = LINESC.v;
     return fetch(u.toString(), { method: 'POST', body: JSON.stringify({ k, action, data }) })
       .then(r => r.text())
       .then(t => {
         let j;
         try { j = JSON.parse(t); } catch (e) { throw new Error('Server ka jawab ajeeb hai 🤔 Deployment "Anyone" access pe hai? New version deploy kiya?'); }
         if (j.error) throw new Error(j.error);
+        hydrateLines(j.data);
         return j;
       });
+  }
+  /* the big meme / line library is cached on the device and only re-sent when it changes */
+  let LINESC = (() => { try { return JSON.parse(localStorage.getItem('kgmp_lines') || 'null'); } catch (e) { return null; } })();
+  function hydrateLines(d) {
+    if (!d) return;
+    if (d.lines) { LINESC = { v: d.linesVer, lines: d.lines, stickers: d.stickers }; try { localStorage.setItem('kgmp_lines', JSON.stringify(LINESC)); } catch (e) {} }
+    else if (LINESC) { d.lines = LINESC.lines; d.stickers = LINESC.stickers; }
   }
   function errText(e) { return String((e && e.message) || e).replace(/^Error:\s*/, ''); }
   function applyRes(res, after) {
@@ -493,6 +579,7 @@
     const fn = { home: vHome, ai: vAI, jaadu: vJaadu, kharcha: vKharcha, tijori: vTijori, budget: vBudget, sapne: vSapne, kist: vKist, dost: vDost, wrapped: vWrapped, badges: vBadges }[TAB];
     document.getElementById('app').innerHTML = '<section class="on">' + fn() + '</section>';
     if (TAB === 'kharcha') bindFilters();
+    if (TAB === 'tijori') vaultFx();
     if (TAB === 'ai') scrollChat();
   }
 
@@ -503,7 +590,8 @@
     const a = D.aura || { score: 0, tier: 'Loading…', emoji: '⏳', next: null };
     const apct = a.next ? Math.max(4, Math.min(100, a.score / Math.max(1, a.score + a.next.need) * 100)) : 100;
     const ticker = [...D.povs.map(p => p.replace(/\n/g, ' ')), ...D.lines.sections.home.slice().sort(() => Math.random() - .5).slice(0, 6)].map(t => '🔥 ' + t).join('   •   ');
-    let html = `${cachedNote()}<div class="ticker"><span>${esc(ticker)}</span></div>
+    let html = `${cachedNote()}<div style="display:flex;justify-content:flex-end;gap:6px;margin-top:6px">${(D.health || []).length ? `<button class="ghost" style="color:var(--amber)" onclick="MODE='ca';store.set('mode','ca');applyMode();go('ca_over')">⚠️ ${D.health.length} data issue${D.health.length > 1 ? 's' : ''}</button>` : ''}<button class="ghost" onclick="syncNow(this)">↻ Sync</button></div>
+    <div class="ticker"><span>${esc(ticker)}</span></div>
     <div class="card hero" style="margin-top:12px">
       ${stk(a.emoji, a.tier, 7, 'right:12px;top:12px', 'dark')}
       <div class="l">👑 Net worth</div><div class="nw">${inr(D.netWorth)}</div>
@@ -715,9 +803,10 @@
     STMTLOG = [row].concat(STMTLOG).slice(0, 10); render();
     const upd = m => { row.msg = m; if ((MODE !== 'ca' && TAB === 'jaadu') || (MODE === 'ca' && CATAB === 'ca_imp')) render(); };
     const tot = { found: 0, added: 0, dup: 0, spent: 0, income: 0, account: acc, fix: null };
+    const batchId = 'f' + Math.random().toString(36).slice(2, 8);   /* one undo for the whole file */
     const send = async (payload, label) => {
       upd('🪄 ' + label + ' — AI entries padh raha hai…');
-      const r = await apiCall('import', Object.assign({ account: acc, statement: true, light: true, hint: 'bank/card statement' }, payload));
+      const r = await apiCall('import', Object.assign({ account: acc, statement: true, light: true, hint: 'bank/card statement', batch: batchId }, payload));
       const s = r.stats || {};
       ['found', 'added', 'dup', 'spent', 'income'].forEach(k => { tot[k] += s[k] || 0; });
       if (s.account) tot.account = s.account;
@@ -823,7 +912,7 @@
     const out = list.filter(t => t.type === 'expense' && !['Card Payment', 'Self Transfer'].includes(t.category)).reduce((s, t) => s + t.amount, 0);
     const inn = list.filter(t => t.type === 'income' && t.category !== 'Card Payment').reduce((s, t) => s + t.amount, 0);
     let groups = '', last = '';
-    list.slice(0, 300).forEach(t => {
+    list.slice(0, window.__kn || 80).forEach(t => {
       const d = fdate(t.date, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
       if (d !== last) { groups += `<div class="day">${d}</div>`; last = d; }
       groups += txRow(t);
@@ -839,7 +928,8 @@
       <div class="sub">${list.length} entries · <span class="neg">Gaya ${inr(out)}</span> · <span class="pos">Aaya ${inr(inn)}</span></div></div>
     <div class="grid" style="grid-template-columns:1fr">
       <div class="card"><details><summary>➕ Detail mein add karo (date, category, sab kuch)</summary>${txForm({})}</details></div>
-      <div class="card">${groups || empty('🫥', '"Dhoondte reh jaoge" — kuch nahi mila')}${list.length > 300 ? '<div class="sub">Sirf pehle 300 dikha rahe. Filter laga ya Sheet khol.</div>' : ''}
+      <div class="card">${groups || empty('🫥', '"Dhoondte reh jaoge" — kuch nahi mila')}${list.length > (window.__kn || 80) ? `<button class="ghost" style="margin-top:8px" onclick="window.__kn=(window.__kn||80)+150;render()">Aur dikhao (${list.length - (window.__kn || 80)} baaki) ⬇️</button>` : ''}
+        <div class="sub" style="margin-top:6px">Last 600 entries yahan · purani entries: 👔 CA mode → Day Book</div>
       <div style="margin-top:10px"><a class="ghost" href="${esc(D.sheetUrl)}" target="_blank" style="text-decoration:none">📦 Google Sheet / CSV export</a></div></div>
     </div>`;
   }
@@ -877,22 +967,97 @@
   }
 
   /* ── TIJORI ── */
+  /* bank-ish colours by name (fallback: a stable colour from the name) */
+  const BRAND = [[/hdfc/, '#004c8f', '#0a1f44'], [/icici/, '#b02a30', '#f37e20'], [/\bsbi\b|state bank/, '#1a5fb4', '#22a7f0'], [/axis/, '#97144d', '#4a0a26'],
+    [/kotak/, '#ed1c24', '#003874'], [/slice/, '#7b2ff7', '#f107a3'], [/one ?card/, '#0b0b0b', '#3f3f46'], [/amex|american express/, '#6b7c88', '#c9d3da'],
+    [/\byes\b/, '#0060aa', '#00a4e4'], [/idfc/, '#9c1d26', '#4a0e12'], [/\bau\b/, '#ec6608', '#6d2077'], [/indusind/, '#8b1d2c', '#3d0b12'],
+    [/paytm/, '#00b9f1', '#002e6e'], [/phonepe/, '#5f259f', '#2e0f52'], [/amazon/, '#232f3e', '#ff9900'], [/simpl/, '#00a88f', '#0b3d38'], [/lazypay/, '#e53935', '#7b1fa2'],
+    [/federal/, '#004b8d', '#c99700'], [/baroda|\bbob\b/, '#f15a22', '#162b75'], [/\bpnb\b|punjab national/, '#a6192e', '#e0a000'], [/canara/, '#0072bc', '#d4a800'],
+    [/\buco\b/, '#0d47a1', '#1976d2'], [/airtel/, '#e40000', '#6b0000'], [/fino/, '#1e3c72', '#2a5298'], [/jio/, '#0f3cc9', '#0a2580'], [/\bdcb\b/, '#1b2a6b', '#4a5aa8'],
+    [/\buni\b/, '#111111', '#4b4b4b'], [/hsbc/, '#db0011', '#2b2b2b'], [/citi/, '#003b70', '#056dae'], [/standard chartered|\bsc\b/, '#0473ea', '#1d8a3a'], [/\brbl\b/, '#21409a', '#ed1c24'],
+    [/bandhan/, '#c8102e', '#5b1a1a'], [/zerodha|groww|upstox|kuvera/, '#1e3a8a', '#10b981']];
+  function brandOf(name) {
+    const n = String(name).toLowerCase(), b = BRAND.find(x => x[0].test(n));
+    if (b) return [b[1], b[2]];
+    let h = 0; for (let i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0;
+    const hue = h % 360; return ['hsl(' + hue + ',62%,32%)', 'hsl(' + ((hue + 40) % 360) + ',70%,48%)'];
+  }
+  function netOf(name) {
+    const n = String(name).toLowerCase();
+    if (/amex|american express/.test(n)) return '<span class="netw">AMEX</span>';
+    if (/rupay/.test(n)) return '<span class="netw">RuPay</span>';
+    if (/visa/.test(n)) return '<span class="netw">VISA</span>';
+    if (/master/.test(n)) return '<span class="mc"><i></i><i></i></span>';
+    return '';
+  }
+  const KIND_LABEL = { bank: 'Debit · Savings', cash: 'Cash in hand', wallet: 'Wallet', investment: 'Investments', credit_card: 'Credit', paylater: 'Pay later', loan: 'Loan' };
+  const NFC = '<svg class="nfc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8.5 8a5 5 0 0 1 0 8"/><path d="M12 5.5a9 9 0 0 1 0 13"/><path d="M15.5 3a13 13 0 0 1 0 18"/></svg>';
+  function ccard(a, i) {
+    const own = { cash: ['#14532d', '#22c55e'], investment: ['#78350f', '#f59e0b'], loan: ['#0f172a', '#475569'] }[a.kind];
+    const named = BRAND.some(x => x[0].test(String(a.name).toLowerCase()));
+    const c = own && !named ? own : brandOf(a.name), holder = (D.profileName || 'Kaha Gaya Mera Paisa').toUpperCase();
+    const last4 = a.last4 ? String(a.last4).slice(-4) : '••••';
+    const util = a.limit ? Math.min(100, Math.max(0, a.value / a.limit * 100)) : 0;
+    const txs = D.recent.filter(t => t.account === a.name || t.to === a.name).slice(0, a.limit ? 1 : 2);
+    const balLbl = a.liability ? (a.kind === 'loan' ? 'Outstanding' : 'Due') : 'Balance';
+    return `<div class="ccard-wrap k-${a.kind}" style="animation-delay:${i * 70}ms"><div class="ccard" onclick="flipCard(this,event)" onpointermove="tiltCard(this,event)" onpointerleave="untilt(this)">
+      <div class="cface" style="--c1:${c[0]};--c2:${c[1]}">
+        <div class="ctop"><div class="cbank">${esc(a.name)}</div><div class="ckind">${esc(KIND_LABEL[a.kind] || a.kind)}${a.name === D.defaultAccount ? '<br>★ default' : ''}</div></div>
+        <div class="cmid">${a.kind === 'cash' ? '<span style="font-size:30px">💵</span>' : a.kind === 'investment' ? '<span style="font-size:30px">📈</span>' : a.kind === 'loan' ? '<span style="font-size:30px">🏛️</span>' : '<div class="emv"></div>' + NFC}</div>
+        <div class="cnum">${a.kind === 'cash' ? '₹ CASH IN HAND' : a.kind === 'investment' ? 'PORTFOLIO' : '•••• •••• •••• ' + esc(last4)}</div>
+        <div class="cbot"><div class="cholder">${esc(holder)}</div><div class="cbal"><small>${balLbl}</small><b>${inr(a.value)}</b></div>${netOf(a.name)}</div>
+      </div>
+      <div class="cface cback" style="--c1:${c[1]};--c2:${c[0]}">
+        <div class="stripe"></div>
+        <div class="bk"><span>${balLbl}</span><b>${inr(a.value)}</b></div>
+        ${a.limit ? `<div class="bk"><span>Limit ${inrS(a.limit)} · free ${inrS(a.available)}</span><span>${Math.round(util)}% used</span></div><div class="ubar"><i style="width:${util}%"></i></div>` : ''}
+        ${txs.map(t => `<div class="mini-tx">${fdate(t.date)} · ${t.type === 'income' || (t.type === 'transfer' && t.to === a.name) ? '+' : '−'}${inr(t.amount)} · ${esc(t.note || t.category)}</div>`).join('') || '<div class="mini-tx">No entries yet</div>'}
+        <div class="acts" onclick="event.stopPropagation()">
+          <button onclick="IMPACC='${jsq(a.name)}';go('jaadu')">📄 Statement</button>
+          <button onclick="openBanks()">🔐 Details</button><button onclick="renameAcc('${jsq(a.name)}')">✏️ Rename</button>
+          ${a.name !== D.defaultAccount ? `<button onclick="call('setDefault',{name:'${jsq(a.name)}'})">★ Default</button>` : ''}</div>
+      </div></div></div>`;
+  }
+  function flipCard(el, e) { if (e.target.closest('.acts')) return; el.style.removeProperty('--rx'); el.style.removeProperty('--ry'); el.classList.toggle('flip'); buzz(); }
+  function tiltCard(el, e) {
+    if (e.pointerType !== 'mouse' || el.classList.contains('flip')) return;
+    const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+    el.style.setProperty('--ry', (x * 14).toFixed(1) + 'deg'); el.style.setProperty('--rx', (-y * 12).toFixed(1) + 'deg');
+  }
+  function untilt(el) { el.style.removeProperty('--rx'); el.style.removeProperty('--ry'); }
+  function renameAcc(name) {
+    const to = prompt('New name for "' + name + '" (updates every entry, due and bank detail):', name);
+    if (to && to.trim() && to.trim() !== name) call('renameAccount', { from: name, to: to.trim() });
+  }
+  function countUp(el, to) {
+    if (!el) return;
+    const t0 = performance.now(), dur = 900;
+    const step = now => { const p = Math.min(1, (now - t0) / dur), v = to * (1 - Math.pow(1 - p, 3)); el.textContent = inr(Math.round(v)); if (p < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+  function vaultFx() {
+    const v = document.querySelector('.vault');
+    if (!v) return;
+    const seen = sessionStorage.getItem('kgmp_vault');
+    if (seen || !VIBE) { v.classList.add('open'); const n = document.getElementById('vaultNw'); if (n) n.textContent = inr(D.netWorth); return; }
+    try { sessionStorage.setItem('kgmp_vault', '1'); } catch (e) {}
+    v.classList.add('anim');
+    setTimeout(() => { countUp(document.getElementById('vaultNw'), D.netWorth);
+      for (let i = 0; i < 10; i++) { const c = document.createElement('div'); c.className = 'coin'; c.textContent = ['🪙', '💰', '✨'][i % 3];
+        c.style.left = (20 + Math.random() * 90) + 'px'; c.style.top = '90px'; c.style.animationDelay = (i * 90) + 'ms'; v.appendChild(c); setTimeout(() => c.remove(), 2600); } }, 1500);
+  }
   function vTijori() {
     const A = D.accounts.filter(a => !a.liability), L = D.accounts.filter(a => a.liability);
-    const accRow = a => {
-      const p = a.limit ? Math.min(100, Math.max(0, a.value / a.limit * 100)) : 0;
-      return `<div class="row"><div class="flex"><div class="acc-ic">${KIND_ICON[a.kind] || '🏦'}</div><div>
-        <div><b>${esc(a.name)}</b> ${a.name === D.defaultAccount ? '<span class="tag">⭐ default</span>' : ''}</div>
-        <div class="sub">${esc(a.kind.replace('_', ' '))}${a.last4 ? ' · ..' + esc(a.last4) : ''}${a.limit ? ' · free ' + inr(a.available) + ' of ' + inrS(a.limit) : ''}</div>
-        ${a.limit ? `<div class="bar ${p > 80 ? 'red' : p > 50 ? 'amber' : ''}" style="width:160px"><i style="width:${p}%"></i></div>` : ''}</div></div>
-        <div style="text-align:right"><b class="${a.liability && a.value > 0 ? 'neg' : ''}">${inr(a.value)}</b><br>
-        <button class="ghost" title="Statement upload" onclick="IMPACC='${jsq(a.name)}';go('jaadu')">📄</button>
-        ${a.name !== D.defaultAccount ? `<button class="ghost" onclick="call('setDefault',{name:'${jsq(a.name)}'})">⭐</button>` : ''}</div></div>`;
-    };
-    return `<div class="stats">${stat('Tere paas', inr(D.assets), '🏦', 'pos')}${stat('Tujh pe udhaar', inr(D.liabilities), '💳', 'neg')}${stat('Net worth', inr(D.netWorth), '👑')}</div>
+    const bolts = [0, 45, 90, 135, 180, 225, 270, 315].map(d => `<span class="bolt" style="left:${50 + 44 * Math.cos(d * Math.PI / 180)}%;top:${50 + 44 * Math.sin(d * Math.PI / 180)}%;transform:translate(-50%,-50%)"></span>`).join('');
+    return `<div class="vault"><div class="vrow">
+        <div class="door-wrap"><div class="door-in">💰</div><div class="door">${bolts}<div class="wheel"><i></i><i></i><i></i><b></b></div></div></div>
+        <div style="min-width:0"><div class="nw-l">👑 Tijori · Net worth</div><div class="nw-v" id="vaultNw">${inr(D.netWorth)}</div>
+          <div class="chips3"><span>🏦 ${inrS(D.assets)}</span><span>💳 −${inrS(D.liabilities)}</span>${D.investments ? `<span>📈 ${inrS(D.investments)}</span>` : ''}${D.receivable ? `<span>🤝 +${inrS(D.receivable)}</span>` : ''}${D.otherAssets ? `<span>🏠 ${inrS(D.otherAssets)}</span>` : ''}</div></div></div></div>
+    <div class="wallet-h"><h2 style="margin:0">🏦 Bank · Cash · Wallet · Investments</h2><span class="sub">${A.length} · swipe →</span></div>
+    <div class="wallet">${A.map(ccard).join('') || empty('🫙', 'Koi account nahi')}</div>
+    <div class="wallet-h"><h2 style="margin:0">💳 Cards · Pay Later · Loans</h2><span class="sub">${L.length} · tap to flip</span></div>
+    <div class="wallet">${L.map((a, i) => ccard(a, i + A.length)).join('') || empty('🕊️', 'Koi udhaar nahi — Karz mukt king 👑')}</div>
     <div class="grid">
-      <div class="card"><h2>🏦 Bank · Cash · Wallet · Investments</h2>${A.map(accRow).join('') || empty('🫙', 'Koi account nahi')}</div>
-      <div class="card"><h2>💳 Cards · Pay Later · Loans</h2>${L.map(accRow).join('') || empty('🕊️', 'Koi udhaar nahi — Karz mukt king 👑')}</div>
       <div class="card"><h2>➕ Naya account</h2><form class="f" onsubmit="submitForm(event,'addAccount')">
         <input name="name" placeholder="Naam: HDFC, ICICI CC, Simpl…" required>
         <select name="kind">${D.kinds.map(k => `<option value="${k}">${KIND_ICON[k]} ${k.replace('_', ' ')}</option>`).join('')}</select>
@@ -1227,6 +1392,10 @@
         ${crow('Balance sheet', Math.abs(bs.diff) < 0.01 ? '<span class="ok">Tallied ✓</span>' : '<span class="neg">Difference ' + fa(bs.diff) + '</span>')}</div>
       <div class="card"><h2>Income vs expenditure — month-wise</h2>${caMini(a.months)}</div>
       <div class="card"><h2>Points to review</h2>${warn.length ? warn.map(w => `<div class="row"><span>• ${esc(w)}</span></div>`).join('') : '<div class="sub">Nothing pending.</div>'}</div>
+      <div class="card"><h2>Data health ${(CA.health || []).length ? '<span class="neg">(' + CA.health.length + ')</span>' : '<span class="ok">✓</span>'}</h2>
+        ${(CA.health || []).length ? CA.health.slice(0, 15).map(h => `<div class="row"><span><b>Sheet row ${h.row}</b> — ${esc(h.issue)}<div class="sub">${esc(h.fix)}</div></span></div>`).join('') +
+          (D && D.sheetUrl ? `<a class="ghost" style="display:inline-block;margin-top:8px;text-decoration:none" href="${esc(D.sheetUrl)}" target="_blank" rel="noopener">Open the Sheet to fix</a>` : '')
+        : '<div class="sub">Every row has a valid date, amount, type and account. No likely duplicates.</div>'}</div>
     </div>`;
   }
   function caMini(ms) {
@@ -1264,6 +1433,12 @@
       + (rows.length > DBN ? `<button class="ghost" style="margin-top:8px" onclick="DBN+=300;caRefreshDay()">Show more (${rows.length - DBN} left)</button>` : '');
   }
   function dbRow(e) {
+    if (e.synthetic) {
+      const why = e.split === 'interest' ? 'auto: interest part of the EMI (set by loan rate)' : e.split === 'gain' ? 'auto: sale above recorded cost → gain' : 'auto: ' + (e.note || 'adjustment');
+      return `<div class="dbrow"><div class="l1"><div style="min-width:0"><div class="sub">${fd2(e.date)} · journal · <b>${esc(why)}</b></div>
+        <div class="ellip"><b>Dr</b> ${esc(nm(e.dr))}</div><div class="ellip"><b>Cr</b> ${esc(nm(e.cr))}</div></div>
+        <div class="mono" style="font-weight:700;white-space:nowrap">${fa(e.amt)}</div></div></div>`;
+    }
     const opts = CA.options[e.type] || [];
     const autoLbl = e.manual ? 'Auto' : 'Auto — ' + nm(e.key);
     const head = e.type === 'transfer' ? `<select disabled><option>Contra — ${esc(nm(e.dr))}</option></select>`
@@ -1303,17 +1478,42 @@
       b = r2(b + (isDr ? e.amt : -e.amt));
       return `<tr><td style="white-space:nowrap">${fd2(e.date)}</td><td>${isDr ? 'To' : 'By'} ${esc(nm(isDr ? e.cr : e.dr))}${e.note ? `<div class="sub">${esc(e.note)}</div>` : ''}</td><td class="n">${isDr ? fa(e.amt) : ''}</td><td class="n">${isDr ? '' : fa(e.amt)}</td><td class="n">${fdc(b)}</td></tr>`;
     }).join('');
-    const canOpen = l.real && (l.key.indexOf('A:') === 0 || l.key === 'BS:invest' || l.key.indexOf('P:') === 0);
+    const canOpen = l.real && (l.key.indexOf('A:') === 0 || l.key === 'BS:invest' || l.key === 'BS:vda' || l.key.indexOf('P:') === 0);
     const natural = l.group === 'liability' ? -l.open : l.open;
     const what = l.group === 'liability' ? 'amount outstanding' : l.group === 'person' ? 'positive = they owe you' : 'balance';
+    const isLoan = l.kind === 'loan', rate = (CA.loanRates || {})[l.key.slice(2)] || '';
     return `<div class="card" style="margin-top:12px"><button class="ghost" onclick="LEDSEL='';render()">← All ledgers</button>
       <h3 style="margin-top:10px">${esc(l.name)}</h3><div class="sub">${GROUP_LABEL[l.group] || ''} · ${esc(r.label)}</div>
+      ${isLoan ? `<div class="flex" style="margin-top:10px;flex-wrap:wrap"><span class="sub">Interest rate (% p.a.) — EMIs are split into principal (reduces this loan${/home|housing/i.test(l.name) ? ', 80C' : ''}) and interest${/home|housing/i.test(l.name) ? ' (24(b))' : ''}:</span>
+        <input id="lrate" type="number" step="0.01" style="width:110px" value="${rate}"><button class="ghost" onclick="caLoan('${jsq(l.key)}')">Save rate</button></div>` : ''}
       ${canOpen ? `<div class="flex" style="margin-top:10px;flex-wrap:wrap"><span class="sub">Opening as on 1 Apr ${CA.fy} (${what}):</span>
         <input id="opv" type="number" step="0.01" style="width:170px" value="${r2(natural)}"><button class="ghost" onclick="caOpening('${jsq(l.key)}')">Set opening</button></div>
         <div class="hint">Enter the opening balance printed on the statement. Earlier entries stay; the base opening is adjusted so this FY starts at this figure.</div>` : ''}
       <div class="tbl-wrap" style="margin-top:10px"><table class="tbl"><tr><th>Date</th><th>Particulars</th><th class="n">Debit</th><th class="n">Credit</th><th class="n">Balance</th></tr>
       <tr class="sec"><td></td><td>Opening balance</td><td></td><td></td><td class="n">${l.real ? fdc(l.open) : '—'}</td></tr>${rows}
       <tr class="tot"><td></td><td>Closing balance</td><td class="n">${fa(l.dr)}</td><td class="n">${fa(l.cr)}</td><td class="n">${fdc(l.real ? l.close : l.dr - l.cr)}</td></tr></table></div></div>`;
+  }
+  function caLoan(key) {
+    const v = Number(document.getElementById('lrate').value);
+    apiCall('caLoan', { key: key, rate: v, fy: CA.fy }).then(res => { CA = res.ca; render(); showVibe(res.msg, null, 'Saved'); }).catch(caErr);
+  }
+  /* Personal assets (Schedule AL): property, gold, vehicles… held at cost / value */
+  function assetsCard() {
+    const list = (CA.report.ledgers || []).filter(l => l.group === 'passet');
+    return `<div class="card" style="margin-top:12px"><h2>Personal assets — at cost / value</h2>
+      ${list.length ? `<table class="tbl">${list.map(l => `<tr><td>${esc(l.name)}</td><td class="n">${fa(l.close)}</td><td style="width:30px"><a href="#" onclick="caAssetDel('${jsq(l.key)}');return false">✕</a></td></tr>`).join('')}</table>` : '<div class="sub">None yet — add property, jewellery, vehicles, PF / PPF balances, insurance surrender value…</div>'}
+      <div class="setf" style="margin-top:8px"><label class="sub">Type<select id="paKind">${['Land / building', 'Gold & jewellery', 'Vehicle', 'PF / PPF / NPS', 'Insurance', 'Shares (demat)', 'Other'].map(x => `<option>${x}</option>`).join('')}</select></label>
+        <label class="sub">Name / description<input id="paName" placeholder="Flat at Pune" autocomplete="off"></label>
+        <label class="sub">Value (₹, cost)<input id="paVal" type="number" step="0.01"></label></div>
+      <button class="ghost" style="margin-top:8px" onclick="caAssetAdd()">Add asset</button><div class="hint">Goes into the balance sheet, net worth and Schedule AL.</div></div>`;
+  }
+  function caAssetAdd() {
+    const d = { kind: document.getElementById('paKind').value.replace(/[^A-Za-z &]/g, '').trim(), name: document.getElementById('paName').value.trim(), value: Number(document.getElementById('paVal').value), fy: CA.fy };
+    apiCall('caAsset', d).then(res => { CA = res.ca; render(); showVibe(res.msg, null, 'Saved'); refreshD(); }).catch(caErr);
+  }
+  function caAssetDel(key) {
+    const p = key.split(':');
+    apiCall('caAsset', { kind: p[2], name: p.slice(3).join(':'), remove: true, fy: CA.fy }).then(res => { CA = res.ca; render(); refreshD(); }).catch(caErr);
   }
   function caOpening(key) {
     const v = Number(document.getElementById('opv').value);
@@ -1367,7 +1567,7 @@
     return h + tbl(Dr, Cr, 'Income & Expenditure Account for the year ended ' + fd2(CA.report.to));
   }
   function cPL() { return viewToggle() + (CLASSIC ? classicIE() : cPLV()); }
-  function cBS() { return viewToggle() + (CLASSIC ? classicBS() : cBSV()); }
+  function cBS() { return viewToggle() + (CLASSIC ? classicBS() : cBSV()) + assetsCard(); }
 
   function cPLV() {
     const ie = CA.report.ie, inv = CA.analytics.totals.inv, hasBiz = ie.biz.receipts || ie.biz.totalExp;
@@ -1440,18 +1640,69 @@
       : `<div class="card" style="margin-top:12px"><h2>Advance tax</h2><div class="sub">${t.advance && t.advance.exempt ? 'Not required — senior citizen without business income (sec 207).' : 'Not required — estimated liability after TDS is below ₹10,000.'}</div></div>`}
     <div class="card" style="margin-top:12px"><h2>Bank accounts for the return</h2>${(t.banks || []).length ? `<table class="tbl"><tr><th>Bank</th><th>IFSC</th><th>Account</th><th>Refund</th></tr>${t.banks.map(b => `<tr><td>${esc(b.bank)}<div class="sub">${esc(b.type)}</div></td><td>${esc(b.ifsc)}</td><td>${esc(b.acc)}</td><td>${b.refund ? '✓' : ''}</td></tr>`).join('')}</table>` : '<div class="sub">No bank details yet.</div>'}
       <button class="ghost" style="margin-top:8px" onclick="go('ca_bank')">Manage bank accounts →</button></div>
+    ${taxDocsCard(t)}
+    ${t.ais && t.ais.has ? `<div class="card" style="margin-top:12px"><h2>AIS / 26AS reconciliation</h2><div class="tbl-wrap"><table class="tbl"><tr><th>Item</th><th class="n">As per ${esc(t.ais.source === 'ais' ? 'AIS' : '26AS')}</th><th class="n">As per books</th><th class="n">Difference</th></tr>
+      ${t.ais.rows.map(r => `<tr><td>${esc(r.item)}</td><td class="n">${fa(r.ais)}</td><td class="n">${r.books === null ? '—' : fa(r.books)}</td><td class="n ${r.diff && Math.abs(r.diff) >= 1 ? 'neg' : 'ok'}">${r.diff === null ? 'report' : Math.abs(r.diff) < 1 ? '✓' : fa(r.diff)}</td></tr>`).join('')}</table></div>
+      <div class="hint">Every difference is something the department already knows about. Explain or include it before filing.</div></div>` : ''}
+    ${t.interest && t.interest.total ? `<div class="card" style="margin-top:12px"><h2>Interest & late fee (estimate)</h2>
+      ${crow('234B — default in advance tax', fa(t.interest.b234B))}${crow('234C — deferment of instalments', fa(t.interest.c234C))}${t.interest.a234A ? crow('234A — late filing', fa(t.interest.a234A)) : ''}${t.interest.f234F ? crow('234F — late fee', fa(t.interest.f234F)) : ''}
+      ${crow('<b>Total payable incl. interest</b>', fa(t.payable.withInterest))}<div class="hint">Assumes filing on ${fd2(t.interest.assumedFiling)}${t.interest.filed ? '' : ' (set "Return filed on" in settings)'}; the ITR utility computes the final figure.</div></div>` : ''}
+    ${t.al && t.al.required ? `<div class="card" style="margin-top:12px"><h2>Schedule AL — assets & liabilities (income above ${fa(t.al.limit)})</h2><table class="tbl">${t.al.rows.map(r => `<tr><td><div class="sub">${esc(r[0])}</div>${esc(r[1])}</td><td class="n">${fa(r[2])}</td></tr>`).join('')}</table>
+      <div class="hint">Add land, building, jewellery, vehicles in Balance Sheet → Personal assets (at cost).</div></div>` : ''}
     <div class="card" style="margin-top:12px"><h2>Assessee profile</h2><div class="setf">
       <label class="sub">Name<input id="pfName" value="${esc(t.profile.name)}" autocomplete="off"></label>
-      <label class="sub">PAN ${t.profile.panMasked ? '(saved: ' + esc(t.profile.panMasked) + ')' : ''}<input id="pfPan" placeholder="${t.profile.pan ? 'leave blank to keep' : 'ABCDE1234F'}" autocomplete="off" maxlength="10" style="text-transform:uppercase"></label>
-      <label class="sub">Residential status<select id="pfStatus">${['Resident', 'Resident but not ordinarily resident', 'Non-resident'].map(x => `<option ${x === t.profile.status ? 'selected' : ''}>${x}</option>`).join('')}</select></label></div>
+      <label class="sub">PAN ${t.profile.panMasked ? '(saved: ' + esc(t.profile.panMasked) + ')' : ''}<input id="pfPan" placeholder="${t.profile.hasPan ? 'leave blank to keep' : 'ABCDE1234F'}" autocomplete="off" maxlength="10" style="text-transform:uppercase"></label>
+      <label class="sub">Residential status<select id="pfStatus">${['Resident', 'Resident but not ordinarily resident', 'Non-resident'].map(x => `<option ${x === t.profile.status ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
+      <label class="sub">Employer name(s) — salary credits from them count as salary<input id="pfEmp" value="${esc(t.profile.employers)}" placeholder="Acme Technologies, Globex" autocomplete="off"></label>
+      <label class="sub" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="pfMetro" style="width:auto" ${t.profile.metro ? 'checked' : ''}> Rented home in a metro (Delhi, Mumbai, Kolkata, Chennai) — HRA 50%</label></div>
       <button class="ghost" style="margin-top:8px" onclick="caSaveProfile()">Save profile</button><div class="hint">Shown (PAN masked) on the PDF report and exported books.</div></div>
     <div class="card" style="margin-top:12px"><h2>Tax settings — ${esc(t.label)}</h2><div class="sub" style="margin-bottom:8px">From Form 16, AIS / TIS / 26AS, broker capital-gains statement and certificates. Leave blank to use the auto figure.</div>
       <div class="setf">${t.fields.map(field).join('')}</div><button class="btn" style="margin-top:10px" onclick="caSaveSet()">Save & recompute</button></div>
     <div class="card" style="margin-top:12px"><h2>Notes</h2>${t.notes.map(x => `<div class="sub" style="margin:4px 0">• ${esc(x)}</div>`).join('')}</div>`;
   }
+  /* 🧾 Tax documents: Form 16, salary slips, 26AS / AIS, capital gains, interest certificates — PDFs are unlocked on this device */
+  let TDLOG = [];
+  function taxDocsCard(t) {
+    const slips = CA.slips || [], agg = (t.auto && t.auto.slips) || { count: 0 };
+    return `<div class="card" style="margin-top:12px"><h2>🧾 Tax documents & salary slips</h2>
+      <div class="sub" style="margin-bottom:8px">Upload Form 16, salary slips (one or many months), Form 26AS, AIS / TIS, your broker / CAMS capital-gains statement or a loan interest certificate. Figures go straight into this year's computation; originals are kept in Drive → Kaha Gaya Mera Paisa — Tax Documents. Telegram works too: send the file with caption "salary slip", "form 16", "26as", "ais" or "capital gains".</div>
+      <div class="setf"><label class="sub">Document type<select id="tdKind">${[['auto', 'Detect automatically'], ['salary_slip', 'Salary slip(s)'], ['form16', 'Form 16'], ['form26as', 'Form 26AS'], ['ais', 'AIS / TIS'], ['capital_gains', 'Capital-gains statement'], ['interest_certificate', 'Interest certificate']].map(o => `<option value="${o[0]}">${o[1]}</option>`).join('')}</select></label>
+        <label class="sub">PDF password (if any — stays on this device)<input id="tdPw" type="password" autocomplete="off" placeholder="e.g. PAN in small letters + DOB"></label></div>
+      <label class="drop" for="tdFile" style="margin-top:8px;padding:14px"><b style="font-size:30px">🧾</b>Choose documents<br><span class="sub">PDF · JPG · PNG — several at once is fine</span></label>
+      <input id="tdFile" type="file" multiple accept="application/pdf,.pdf,.jpg,.jpeg,.png" style="display:none" onchange="taxDocs([...this.files]);this.value=''">
+      <div style="margin-top:8px">${TDLOG.map(r => `<div class="imp"><span class="st">${r.status === 'busy' ? '<span class="spin">⏳</span>' : r.status === 'ok' ? '✅' : '⚠️'}</span><div><b>${esc(r.name)}</b><pre>${esc(r.msg)}</pre></div></div>`).join('')}</div>
+      ${slips.length ? `<h3 style="font-size:15px;margin-top:12px">Salary slips — ${esc(t.label)} (${slips.length})</h3><div class="tbl-wrap"><table class="tbl"><tr><th>Month</th><th>Employer</th><th class="n">Gross</th><th class="n">Basic</th><th class="n">HRA</th><th class="n">PF</th><th class="n">TDS</th><th class="n">Net</th><th>Bank</th><th></th></tr>
+        ${slips.map(s => `<tr><td>${esc(s.month)}</td><td>${esc(s.employer)}</td><td class="n">${fa(s.gross)}</td><td class="n">${fa(s.basic)}</td><td class="n">${fa(s.hra)}</td><td class="n">${fa(s.pf)}</td><td class="n">${fa(s.tds)}</td><td class="n">${fa(s.net)}</td>
+          <td>${s.matched ? '<span class="ok">✓</span>' : '<span class="sub">not found</span>'}</td><td>${s.file ? `<a href="${esc(s.file)}" target="_blank" rel="noopener">📎</a>` : ''} <a href="#" onclick="delSlip(${s.row});return false">✕</a></td></tr>`).join('')}
+        <tr class="tot"><td>Total</td><td></td><td class="n">${fa(agg.gross)}</td><td class="n">${fa(agg.basic)}</td><td class="n">${fa(agg.hra)}</td><td class="n">${fa(agg.pf)}</td><td class="n">${fa(agg.tds)}</td><td class="n">${fa(agg.net)}</td><td></td><td></td></tr></table></div>
+        <div class="hint">Slips feed gross salary, TDS, professional tax, EPF (80C) and the HRA calculation (exemption now ${fa(t.heads.salary.hra)}). Missing months: ${(() => { const have = slips.map(s => s.month), miss = []; for (let i = 0; i < 12; i++) { const d = new Date(CA.fy, 3 + i, 1); if (d > new Date()) break; const k = ym(d); if (have.indexOf(k) < 0) miss.push(d.toLocaleDateString('en-IN', { month: 'short' })); } return miss.length ? miss.join(', ') : 'none 🎉'; })()}.</div>` : ''}
+    </div>`;
+  }
+  async function taxDocs(files) {
+    const kind = (document.getElementById('tdKind') || {}).value || 'auto', pw = (document.getElementById('tdPw') || {}).value || '';
+    for (const f of files) {
+      const row = { name: f.name, status: 'busy', msg: 'Reading…' };
+      TDLOG = [row].concat(TDLOG).slice(0, 12); render();
+      try {
+        if (f.size > 15e6) throw new Error('File is above 15 MB');
+        let text = '', b64 = '', mime = f.type || '';
+        if (/pdf$/i.test(mime) || /\.pdf$/i.test(f.name)) {
+          const pages = await pdfPages(new Uint8Array(await f.arrayBuffer()), pw);
+          text = pages.map((p, i) => '--- Page ' + (i + 1) + ' ---\n' + p.text).join('\n');
+          if (text.replace(/\s|-|Page|\d/g, '').length < pages.length * 40) { text = ''; b64 = await pageToJpeg(pages[0].page); mime = 'image/jpeg'; }
+          else b64 = f.size < 8e6 ? await readB64(f) : '';
+        } else b64 = await readB64(f);
+        const res = await apiCall('caDoc', { name: f.name, mime: mime || 'application/pdf', b64: b64, text: text, kind: kind, fy: CA.fy });
+        row.status = 'ok'; row.msg = res.msg; if (res.ca && Number(res.ca.fy) === Number(CA.fy)) CA = res.ca;
+      } catch (e) { row.status = 'err'; row.msg = errText(e); }
+      render();
+    }
+  }
+  function delSlip(row) { if (!confirm('Remove this salary slip?')) return; apiCall('deleteSlip', { row: row, fy: CA.fy }).then(() => caReload()).catch(caErr); }
   function caSaveProfile() {
     const pan = document.getElementById('pfPan').value.trim().toUpperCase();
-    const profile = { name: document.getElementById('pfName').value.trim(), pan: pan || CA.itr.profile.pan, status: document.getElementById('pfStatus').value };
+    const profile = { name: document.getElementById('pfName').value.trim(), pan: pan, status: document.getElementById('pfStatus').value,
+      employers: document.getElementById('pfEmp').value.trim(), metro: document.getElementById('pfMetro').checked };
     apiCall('caProfile', { fy: CA.fy, profile: profile }).then(res => { CA = res.ca; render(); showVibe('Profile saved.', null, 'Saved'); }).catch(caErr);
   }
   function caPdf() {
@@ -1466,37 +1717,69 @@
     }).catch(caErr);
   }
 
-  /* Bank details — stored in the BankDetails sheet; numbers masked until tapped; never passwords / PINs / CVV */
-  function loadBanks(cb) { apiCall('banks', {}).then(res => { BANKS = res.banks || []; cb && cb(); }).catch(e => { BANKS = []; caErr(e); cb && cb(); }); }
+  /* Bank details — BankDetails sheet. Numbers stay masked on the server unless the vault PIN is given (kept only for this browser session). */
+  let VAULT = { hasPin: false };
+  function vpin() { try { return sessionStorage.getItem('kgmp_vpin') || ''; } catch (e) { return ''; } }
+  function setVpin(p) { try { if (p) sessionStorage.setItem('kgmp_vpin', p); else sessionStorage.removeItem('kgmp_vpin'); } catch (e) {} }
+  function loadBanks(cb) {
+    apiCall('banks', { pin: vpin() }).then(res => { BANKS = res.banks || []; VAULT = res.vault || VAULT; cb && cb(); })
+      .catch(e => { if (/PIN/i.test(errText(e))) setVpin(''); BANKS = BANKS || []; showVibe(errText(e), null, 'Vault'); cb && cb(); });
+  }
   function cBank() {
     if (!BANKS) { loadBanks(() => { if (MODE === 'ca' && CATAB === 'ca_bank') render(); }); return '<div class="loader"><b>🏦</b>Loading bank details…</div>'; }
     return '<div class="card" style="margin-top:12px">' + bankHtml() + '</div>';
   }
+  function vaultBar() {
+    const open = (BANKS || []).some(b => b.open);
+    if (!VAULT.hasPin) return `<div class="card" style="background:var(--card2);margin-bottom:10px"><b>🔐 Set a vault PIN</b><div class="sub">Account numbers stay masked until a PIN is set and entered — even if someone gets your app link.</div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><input id="vpNew" type="password" inputmode="numeric" maxlength="8" placeholder="New PIN (4–8 digits)" style="max-width:200px">
+      <button class="btn" onclick="vaultSetPin()">Set PIN</button></div></div>`;
+    if (open) return `<div class="sub" style="margin-bottom:8px">🔓 Unlocked for this session · <a href="#" onclick="setVpin('');loadBanks(bankRefresh);return false">Lock</a> ·
+      <a href="#" onclick="vaultChangePin();return false">Change PIN</a> · <a href="#" onclick="rotateLink();return false">New secret link</a></div>`;
+    return `<div class="card" style="background:var(--card2);margin-bottom:10px"><b>🔒 Vault locked</b><div class="sub">Enter your PIN to see full numbers or edit.</div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><input id="vpIn" type="password" inputmode="numeric" maxlength="8" placeholder="PIN" style="max-width:160px" onkeydown="if(event.key==='Enter')vaultUnlock()">
+      <button class="btn" onclick="vaultUnlock()">Unlock</button></div></div>`;
+  }
+  function vaultUnlock() { const p = (document.getElementById('vpIn') || {}).value || ''; if (!p) return; setVpin(p); loadBanks(bankRefresh); }
+  function vaultSetPin() {
+    const p = (document.getElementById('vpNew') || {}).value || '';
+    apiCall('vaultPin', { newPin: p }).then(() => { setVpin(p); VAULT.hasPin = true; loadBanks(bankRefresh); showVibe('Vault PIN set 🔐', null, 'Vault'); }).catch(e => showVibe(errText(e), null, 'Vault'));
+  }
+  function vaultChangePin() {
+    const p = prompt('New vault PIN (4–8 digits):');
+    if (!p) return;
+    apiCall('vaultPin', { pin: vpin(), newPin: p }).then(() => { setVpin(p); showVibe('PIN changed.', null, 'Vault'); }).catch(e => showVibe(errText(e), null, 'Vault'));
+  }
+  function rotateLink() {
+    if (!confirm('Create a new secret app link? The old link stops working everywhere (phones, bookmarks). This device switches to the new one automatically; on other devices use /dash in Telegram.')) return;
+    apiCall('rotateKey', { pin: vpin() }).then(res => {
+      if (!IS_GAS) { store.set('api', res.link); showVibe('New link saved on this device ✅', null, 'Vault'); }
+      else openModal(`<h3>New secret link</h3><div class="sub" style="margin:6px 0 12px">The old link no longer works. Open the new one (and bookmark it):</div>
+        <a class="btn" style="display:block;text-align:center;text-decoration:none" href="${esc(res.link)}" target="_top">Open new link</a>`);
+    }).catch(e => showVibe(errText(e), null, 'Vault'));
+  }
   function bankHtml() {
     const list = BANKS || [];
-    const row = b => {
-      const show = BANKSHOW[b.row];
-      const num = show ? esc(b.accountNo) : (b.accountNo ? 'XXXX' + esc(b.accountNo.slice(-4)) : '—');
-      return `<div class="bankrow"><div class="flex" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0"><b>${esc(b.bank)}</b> <span class="sub">${esc(b.type)}${b.account ? ' · linked to ' + esc(b.account) : ''}${b.refund ? ' · <b>refund account</b>' : ''}</span>
-        <div class="mono">A/c ${num} <button class="ghost" style="padding:1px 7px" onclick="BANKSHOW[${b.row}]=!BANKSHOW[${b.row}];bankRefresh()">${show ? 'Hide' : 'Show'}</button>${show && b.accountNo ? ` <button class="ghost" style="padding:1px 7px" onclick="copyTxt('${jsq(b.accountNo)}')">Copy</button>` : ''}</div>
+    const row = b => `<div class="bankrow"><div class="flex" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0"><b>${esc(b.bank)}</b> <span class="sub">${esc(b.type)}${b.account ? ' · linked to ' + esc(b.account) : ''}${b.refund ? ' · <b>refund account</b>' : ''}</span>
+        <div class="mono">A/c ${esc(b.accountNo || '—')}${b.open && b.accountNo ? ` <button class="ghost" style="padding:1px 7px" onclick="copyTxt('${jsq(b.accountNo)}')">Copy</button>` : ''}</div>
         <div class="sub">IFSC ${esc(b.ifsc || '—')}${b.ifsc ? ` <button class="ghost" style="padding:1px 7px" onclick="copyTxt('${jsq(b.ifsc)}')">Copy</button>` : ''}${b.branch ? ' · ' + esc(b.branch) : ''}</div>
-        <div class="sub">${[b.holder && 'Holder: ' + b.holder, b.customerId && 'Cust ID: ' + (show ? b.customerId : 'XXXX' + b.customerId.slice(-3)), b.upi && 'UPI: ' + b.upi, b.nominee && 'Nominee: ' + b.nominee].filter(Boolean).map(esc).join(' · ')}</div>
+        <div class="sub">${[b.holder && 'Holder: ' + b.holder, b.customerId && 'Cust ID: ' + b.customerId, b.upi && 'UPI: ' + b.upi, b.nominee && 'Nominee: ' + b.nominee].filter(Boolean).map(esc).join(' · ')}</div>
         ${b.notes ? `<div class="sub">${esc(b.notes)}</div>` : ''}</div>
-        <div style="display:flex;gap:4px;flex:none"><button class="ghost" onclick="BANKEDIT=${b.row};bankRefresh()">Edit</button><button class="ghost" onclick="bankDelete(${b.row},'${jsq(b.accountNo)}')">✕</button></div></div></div>`;
-    };
+        ${b.open || !VAULT.hasPin ? `<div style="display:flex;gap:4px;flex:none"><button class="ghost" onclick="BANKEDIT=${b.row};bankRefresh()">Edit</button><button class="ghost" onclick="bankDelete(${b.row},'${jsq(b.accountNo)}')">✕</button></div>` : ''}</div></div>`;
     const e = list.find(b => b.row === BANKEDIT) || {};
     const f = (id, label, val, ph) => `<label class="sub">${label}<input id="bk_${id}" value="${esc(val || '')}" placeholder="${ph || ''}" autocomplete="off"></label>`;
     const accs = (D && D.accounts) || [];
-    const form = `<h2 style="margin-top:14px">${BANKEDIT ? 'Edit bank account' : 'Add bank account'}</h2><div class="setf">
+    const canEdit = !VAULT.hasPin || list.some(b => b.open) || !list.length;
+    const form = !canEdit ? '' : `<h2 style="margin-top:14px">${BANKEDIT ? 'Edit bank account' : 'Add bank account'}</h2><div class="setf">
       ${f('bank', 'Bank name *', e.bank, 'HDFC Bank')}${f('holder', 'Account holder', e.holder)}${f('accountNo', 'Account number', e.accountNo, 'digits only')}
       ${f('ifsc', 'IFSC', e.ifsc, 'HDFC0001234')}${f('branch', 'Branch', e.branch)}
       <label class="sub">Account type<select id="bk_type">${['Savings', 'Current', 'Salary', 'OD / CC', 'NRE', 'NRO', 'FD / RD', 'Other'].map(x => `<option ${x === (e.type || 'Savings') ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
       <label class="sub">Linked app account<select id="bk_account"><option value="">—</option>${accs.map(a => `<option ${a.name === e.account ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></label>
       ${f('customerId', 'Customer ID', e.customerId)}${f('upi', 'UPI ID', e.upi, 'name@bank')}${f('nominee', 'Nominee', e.nominee)}${f('notes', 'Notes', e.notes)}
       <label class="sub" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="bk_refund" style="width:auto" ${e.refund ? 'checked' : ''}> Use for income-tax refund</label></div>
-      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" onclick="bankSave()">${BANKEDIT ? 'Save changes' : 'Add account'}</button>${BANKEDIT ? '<button class="ghost" onclick="BANKEDIT=null;bankRefresh()">Cancel</button>' : ''}</div>
-      <div class="hint">🔒 Stored only in your own Google Sheet (BankDetails tab). Never store passwords, PINs, CVV or OTPs here — the app refuses them.</div>`;
-    return `<h2>Bank accounts</h2>${list.length ? list.map(row).join('') : '<div class="sub">No bank accounts saved yet.</div>'}${form}`;
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" onclick="bankSave()">${BANKEDIT ? 'Save changes' : 'Add account'}</button>${BANKEDIT ? '<button class="ghost" onclick="BANKEDIT=null;bankRefresh()">Cancel</button>' : ''}</div>`;
+    return `<h2>🏦 Bank accounts</h2>${vaultBar()}${list.length ? list.map(row).join('') : '<div class="sub">No bank accounts saved yet.</div>'}${form}
+      <div class="hint">🔒 Stored only in your own Google Sheet (BankDetails tab) — don't share that Sheet. Never store passwords, PINs, CVV or OTPs — the app refuses them.</div>`;
   }
   function bankRefresh() { if (MODE === 'ca' && CATAB === 'ca_bank') render(); else { const b = document.getElementById('bankBox'); if (b) b.innerHTML = bankHtml(); } }
   function openBanks() {
@@ -1505,13 +1788,13 @@
   }
   function bankSave() {
     const v = id => (document.getElementById('bk_' + id) || {}).value || '';
-    const d = { row: BANKEDIT || '', bank: v('bank'), holder: v('holder'), accountNo: v('accountNo'), ifsc: v('ifsc').toUpperCase(), branch: v('branch'), type: v('type'),
+    const d = { pin: vpin(), row: BANKEDIT || '', bank: v('bank'), holder: v('holder'), accountNo: v('accountNo'), ifsc: v('ifsc').toUpperCase(), branch: v('branch'), type: v('type'),
       account: v('account'), customerId: v('customerId'), upi: v('upi'), nominee: v('nominee'), notes: v('notes'), refund: document.getElementById('bk_refund').checked };
-    apiCall('saveBank', d).then(res => { BANKS = res.banks; BANKEDIT = null; bankRefresh(); showVibe('Bank details saved.', MODE === 'ca' ? null : '🏦', 'Saved'); if (CA) apiCall('ca', { fy: CA.fy }).then(r => { CA = r.ca; }).catch(() => {}); }).catch(e => showVibe(errText(e), null, 'Error'));
+    apiCall('saveBank', d).then(res => { BANKS = res.banks; VAULT = res.vault || VAULT; BANKEDIT = null; bankRefresh(); showVibe('Bank details saved.', MODE === 'ca' ? null : '🏦', 'Saved'); if (CA) apiCall('ca', { fy: CA.fy }).then(r => { CA = r.ca; }).catch(() => {}); }).catch(e => showVibe(errText(e), null, 'Error'));
   }
   function bankDelete(row, acc) {
     if (!confirm('Remove this bank account from the BankDetails sheet?')) return;
-    apiCall('deleteBank', { row: row, accountNo: acc }).then(res => { BANKS = res.banks; bankRefresh(); }).catch(e => showVibe(errText(e), null, 'Error'));
+    apiCall('deleteBank', { pin: vpin(), row: row, accountNo: acc }).then(res => { BANKS = res.banks; bankRefresh(); }).catch(e => showVibe(errText(e), null, 'Error'));
   }
   function copyTxt(s) { try { navigator.clipboard.writeText(s); showVibe('Copied.', null, 'Copied'); } catch (e) { prompt('Copy:', s); } }
 
@@ -1655,6 +1938,10 @@
       await c.delete(k);
     }
     if (files.length) { go('jaadu'); pickFiles(files); }
+  }
+  function syncNow(btn) {
+    if (btn) btn.innerHTML = '<span class="spin">↻</span> Syncing';
+    apiCall('dashboard', { fresh: 1 }).then(res => { D = res.data; saveCache(); render(); showVibe('Fresh data aa gaya 📶', '🔄', 'Sync'); }).catch(e => showVibe(errText(e), '📴', 'Sync'));
   }
   function boot(fresh) {
     apiCall('dashboard').then(res => {
